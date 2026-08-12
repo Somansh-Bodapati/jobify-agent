@@ -32,6 +32,7 @@ export default async function ApplicationsPage() {
               <th className="py-3 px-4">Screenshot</th>
               <th className="py-3 px-4">Job</th>
               <th className="py-3 px-4">Company</th>
+              <th className="py-3 px-4">Location</th>
               <th className="py-3 px-4">Resume</th>
               <th className="py-3 px-4">Status</th>
               <th className="py-3 px-4">Date</th>
@@ -63,6 +64,7 @@ export default async function ApplicationsPage() {
                     </a>
                   </td>
                   <td className="py-2 px-4">{a.job.company.name}</td>
+                  <td className="py-2 px-4 text-text-muted max-w-[180px] truncate" title={a.job.location ?? undefined}>{a.job.location ?? "—"}</td>
                   <td className="py-2 px-4 text-text-muted">{a.resumeVariant?.label ?? "—"}</td>
                   <td className="py-2 px-4"><StatusBadge status={a.status} /></td>
                   <td className="py-2 px-4 text-text-faint data-cell text-xs">{a.appliedAt.toLocaleString()}</td>

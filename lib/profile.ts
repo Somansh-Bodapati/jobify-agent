@@ -26,6 +26,11 @@ export type Profile = {
     citizen: boolean;
     freeTextAnswer: string;
   };
+  citizenship: {
+    country: string;
+    isUSCitizen: boolean;
+    freeTextAnswer: string;
+  };
   selfIdentification: {
     gender: string;
     raceEthnicity: string;

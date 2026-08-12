@@ -21,6 +21,11 @@
     "citizen": false,
     "freeTextAnswer": "REPLACE_ME"
   },
+  "citizenship": {
+    "country": "REPLACE_ME",
+    "isUSCitizen": false,
+    "freeTextAnswer": "REPLACE_ME"
+  },
   "selfIdentification": {
     "gender": "Decline to state",
     "raceEthnicity": "Decline to state",

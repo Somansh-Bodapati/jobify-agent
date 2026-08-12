@@ -16,6 +16,7 @@ import { runJob } from "../lib/ats/engine";
 import type { JobResult } from "../lib/ats/types";
 import { reportRecurringUnmatchedQuestions } from "../lib/unmatchedQuestions";
 import { generateTailoredResume } from "../lib/generateTailoredResume";
+import { loadProfile } from "../lib/profile";
 
 const CIRCUIT_BREAKER_THRESHOLD = 3;
 const RETRY_CAP = 3;
@@ -29,6 +30,19 @@ function sleep(ms: number) {
  * bot hammering the same company back-to-back — 3-8s. */
 function humanPaceDelay() {
   return sleep(3000 + Math.random() * 5000);
+}
+
+/** Builds a human-readable resume filename — "firstname_lastname_job_title.pdf" —
+ * instead of the opaque dedupeId hash, since the ATS shows this filename
+ * directly to the recruiter reviewing the application. */
+function resumeFilename(firstName: string, lastName: string, jobTitle: string): string {
+  const slug = jobTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 60);
+  const name = `${firstName}_${lastName}`.toLowerCase().replace(/[^a-z0-9_]+/g, "");
+  return `${name}_${slug}.pdf`;
 }
 
 function loadApprovedCompanies(): Set<string> {
@@ -124,6 +138,7 @@ async function main() {
   }
 
   const approvedCompanies = loadApprovedCompanies();
+  const profile = loadProfile();
   const deadline = maxMinutes ? Date.now() + maxMinutes * 60_000 : null;
   const browser = await chromium.launch();
 
@@ -149,11 +164,16 @@ async function main() {
     // Per-JD tailoring: reorder (never rewrite) the base resume's bullets by
     // relevance to this job's title/description. Falls back to the static
     // pre-built category PDF on any failure — never blocks the application.
+    // Filename is human-readable (firstname_lastname_job_title.pdf) since
+    // Playwright uploads using the file's own basename and the ATS/recruiter
+    // sees that name directly — nested under a dedupeId dir to stay unique
+    // per job even when two postings share a title.
     let resumePdfPath = join(process.cwd(), job.resumePdfPath);
     try {
-      const tailoredDir = join(process.cwd(), "public/resumes/tailored", job.companySlug);
+      const tailoredDir = join(process.cwd(), "public/resumes/tailored", job.companySlug, job.dedupeId);
       mkdirSync(tailoredDir, { recursive: true });
-      const tailoredPath = join(tailoredDir, `${job.dedupeId}.pdf`);
+      const filename = resumeFilename(profile.firstName, profile.lastName, job.title);
+      const tailoredPath = join(tailoredDir, filename);
       await generateTailoredResume(browser, job.resumeCategory, job.title, job.description ?? "", tailoredPath);
       resumePdfPath = tailoredPath;
     } catch (err) {

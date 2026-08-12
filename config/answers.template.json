@@ -26,6 +26,7 @@
     { "pattern": "zip|postal code", "field": "profile.zip" },
     { "pattern": "city", "field": "profile.city" },
     { "pattern": "state|province", "field": "profile.state" },
+    { "pattern": "citizenship|country of citizenship|^nationality$|what is your nationality", "field": "profile.citizenship.country" },
     { "pattern": "country", "field": "profile.country", "aliasGroup": "countryAliases" },
     { "pattern": "authorized to work|work authorization|legally authorized", "field": "profile.workAuthorization.authorizedToWorkInUS" },
     { "pattern": "require.*sponsorship|need.*sponsorship|visa sponsorship", "field": "profile.workAuthorization.freeTextAnswer" },
