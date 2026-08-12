@@ -49,13 +49,76 @@ function bulletRelevance(bullet: Bullet, jobTags: Set<string>): number {
   return overlap * 100 - bullet.priority;
 }
 
+// --- Keyword weaving ---------------------------------------------------
+// This is the line between honest tailoring and résumé fraud, and it's drawn
+// deliberately: a skill can only be woven into a bullet if it is ALREADY a
+// real, declared item in this resume's own skillGroups (i.e. the candidate
+// already claims to have it) — never a technology invented because a JD
+// mentions it. What changes is *which already-true skill gets surfaced in
+// which bullet's sentence*, not the truth of what skills exist. This keeps
+// every version "quick to pick up in interview": every named tool is one the
+// candidate can actually speak to, just not always the one originally
+// written into that specific sentence.
+//
+// Capped resume-wide (not per-subsection): the first version of this
+// injected the same top-scoring missing skill into up to 2 bullets in every
+// one of 5 subsections — "drawing on Java" ten times across one resume reads
+// as obviously mechanical and undermines the whole point. Real recruiters
+// and ATS semantic matching both penalize repetition, so this rotates
+// through distinct missing skills and injects into only a handful of the
+// single most relevant bullets resume-wide.
+const MAX_TOTAL_INJECTIONS = 4;
+
+function allDeclaredSkills(content: ResumeContent): string[] {
+  const skills: string[] = [];
+  for (const group of Object.values(content.skillGroups)) {
+    for (const item of group.items) skills.push(item);
+  }
+  return skills;
+}
+
+/** Finds declared skills that the JD text mentions (by name, case-insensitive,
+ * tolerant of common punctuation variants like "Node.js" vs "nodejs"). */
+function skillsMentionedInJob(declaredSkills: string[], jobText: string): string[] {
+  const haystack = jobText.toLowerCase();
+  return declaredSkills.filter((skill) => {
+    const normalized = skill
+      .toLowerCase()
+      .replace(/\s*\([^)]*\)/g, "") // "Angular (16+)" -> "angular"
+      .trim();
+    if (!normalized) return false;
+    const bare = normalized.replace(/[.\-\s]/g, ""); // "Node.js" -> "nodejs", "Micro Frontends" -> "microfrontends"
+    return haystack.includes(normalized) || haystack.includes(bare);
+  });
+}
+
+function bulletMentionsSkill(bulletText: string, skill: string): boolean {
+  const normalized = skill.toLowerCase().replace(/\s*\([^)]*\)/g, "").trim();
+  return bulletText.toLowerCase().includes(normalized);
+}
+
+/** Weaves a real, already-declared skill into a bullet's existing sentence
+ * as a trailing clause, grammatically hedged so it reads as emphasis/detail
+ * rather than a bolted-on keyword dump. Never touches the bullet's factual
+ * claims (what was built, for whom, what the measured outcome was) — only
+ * adds which already-true tool was used. */
+function weaveSkillIntoBullet(bulletText: string, skill: string): string {
+  const clean = skill.replace(/\s*\([^)]*\)/g, "").trim();
+  const endsWithPeriod = /\.\s*$/.test(bulletText);
+  const base = endsWithPeriod ? bulletText.replace(/\.\s*$/, "") : bulletText;
+  return `${base}, drawing on ${clean}.`;
+}
+
+type FlatBullet = { subsectionRef: Bullet[]; index: number; bullet: Bullet; relevance: number };
+
 /**
- * Reorders (never rewrites or invents) bullets within each subsection by
- * relevance to the job's extracted tags — the highest-relevance, real bullet
- * text moves first. Every bullet already in the base resume is still
- * included; nothing is dropped unless dropLowestIfOverflow trims the very
- * lowest-relevance bullets to fit a page budget (used only as a last resort
- * by the render-and-verify retry loop, never invents replacement text).
+ * Reorders bullets by relevance to the job's extracted tags (highest first),
+ * then weaves already-declared-but-unmentioned JD skills into a small,
+ * resume-wide-capped set of the single most relevant bullets — rotating
+ * through distinct skills rather than repeating the same one everywhere.
+ * Every bullet stays real; nothing is invented; every injected skill is one
+ * already listed in the Skills section of this exact resume. Bullets are
+ * only ever dropped (never rewritten away) as a last-resort page-overflow trim.
  */
 export function tailorContentForJob(
   content: ResumeContent,
@@ -65,8 +128,12 @@ export function tailorContentForJob(
 ): ResumeContent {
   const jobTags = extractJobTags(jobTitle, jobDescription);
   const maxDrop = opts.maxBulletsToDropPerSubsection ?? 0;
+  const jobText = `${jobTitle} ${jobDescription}`;
+  const declaredSkills = allDeclaredSkills(content);
+  const jdSkills = skillsMentionedInJob(declaredSkills, jobText);
 
-  const tailoredExperience = content.experience.map((job) => ({
+  // First pass: reorder + trim within each subsection (unchanged behavior).
+  const reorderedExperience = content.experience.map((job) => ({
     ...job,
     subsections: job.subsections.map((sub) => {
       const ranked = [...sub.bullets].sort((a, b) => bulletRelevance(b, jobTags) - bulletRelevance(a, jobTags));
@@ -75,5 +142,40 @@ export function tailorContentForJob(
     }),
   }));
 
-  return { ...content, experience: tailoredExperience };
+  if (jdSkills.length === 0) return { ...content, experience: reorderedExperience };
+
+  // Second pass: pick the top MAX_TOTAL_INJECTIONS bullets RESUME-WIDE (not
+  // per-subsection) that are missing at least one JD-relevant skill, and
+  // weave in a different skill into each — round-robining through jdSkills
+  // so the same word doesn't repeat across the whole document.
+  const candidates: FlatBullet[] = [];
+  for (const job of reorderedExperience) {
+    for (const sub of job.subsections) {
+      sub.bullets.forEach((bullet, index) => {
+        if (jdSkills.some((s) => !bulletMentionsSkill(bullet.text, s))) {
+          candidates.push({ subsectionRef: sub.bullets, index, bullet, relevance: bulletRelevance(bullet, jobTags) });
+        }
+      });
+    }
+  }
+  candidates.sort((a, b) => b.relevance - a.relevance);
+
+  const usedSkillCounts = new Map<string, number>();
+  let injected = 0;
+  for (const candidate of candidates) {
+    if (injected >= MAX_TOTAL_INJECTIONS) break;
+    const missing = jdSkills.filter((s) => !bulletMentionsSkill(candidate.bullet.text, s));
+    if (missing.length === 0) continue;
+    // Prefer whichever missing skill has been used least so far, for variety.
+    missing.sort((a, b) => (usedSkillCounts.get(a) ?? 0) - (usedSkillCounts.get(b) ?? 0));
+    const chosen = missing[0];
+    candidate.subsectionRef[candidate.index] = {
+      ...candidate.bullet,
+      text: weaveSkillIntoBullet(candidate.bullet.text, chosen),
+    };
+    usedSkillCounts.set(chosen, (usedSkillCounts.get(chosen) ?? 0) + 1);
+    injected++;
+  }
+
+  return { ...content, experience: reorderedExperience };
 }
