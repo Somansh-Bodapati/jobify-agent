@@ -77,6 +77,58 @@ function allDeclaredSkills(content: ResumeContent): string[] {
   return skills;
 }
 
+/**
+ * Which bullet-tags each declared skill is thematically compatible with —
+ * without this, injection was picking bullets purely by JD-relevance score
+ * and ignoring whether the specific skill made sense in that sentence at
+ * all (verified live: "OracleDB" got woven into a bullet about fiber-optic
+ * networking hardware, "Kubernetes" into a frontend-API-integration bullet
+ * — exactly the kind of mismatch an interviewer would immediately flag,
+ * which defeats "quick to pick up in interview"). Two trivial/universal
+ * tools (Git, VSCode) are excluded entirely — everyone has them, weaving
+ * them in signals nothing and isn't worth the risk of a bad placement.
+ */
+const SKILL_TAGS: Record<string, string[]> = {
+  "Angular (16+)": ["frontend", "angular", "ui"],
+  React: ["frontend", "react", "ui"],
+  TypeScript: ["frontend", "react", "angular"],
+  RxJS: ["frontend", "angular"],
+  NgRx: ["frontend", "angular"],
+  JavaScript: ["frontend"],
+  HTML5: ["frontend", "ui"],
+  CSS: ["frontend", "ui", "accessibility"],
+  SASS: ["frontend", "ui"],
+  Python: ["python", "ai", "genai"],
+  Java: ["java", "enterprise"],
+  Jest: ["testing", "frontend"],
+  "RESTful APIs": ["api", "integration"],
+  OAuth: ["api", "integration"],
+  SpringBoot: ["java", "enterprise", "api"],
+  Bootstrap: ["frontend", "ui"],
+  OracleDB: ["java", "enterprise"],
+  MongoDB: ["api", "integration"],
+  "Micro Frontends": ["frontend", "architecture"],
+  "Webpack Module Federation": ["frontend", "architecture", "performance"],
+  "Design Systems": ["frontend", "ui", "architecture"],
+  "Reusable Component Libraries": ["frontend", "ui", "architecture", "testing"],
+  Figma: ["frontend", "ui"],
+  "Python GenAI Services": ["python", "ai", "genai"],
+  "LLM Agent Workflows": ["ai", "genai", "llm", "agent"],
+  "Agile/Scrum": ["workflow", "cross_functional"],
+  Jira: ["workflow", "cross_functional"],
+  Docker: ["architecture", "performance"],
+  Kubernetes: ["architecture", "performance"],
+  "TDD/BDD": ["testing"],
+  "CI/CD": ["workflow", "performance"],
+  Jenkins: ["workflow", "performance"],
+};
+
+function isSkillCompatibleWithBullet(skill: string, bullet: Bullet): boolean {
+  const compatibleTags = SKILL_TAGS[skill];
+  if (!compatibleTags) return false; // unmapped (e.g. Git/GitHub, VSCode) — never a candidate
+  return compatibleTags.some((t) => bullet.tags.includes(t));
+}
+
 /** Finds declared skills that the JD text mentions (by name, case-insensitive,
  * tolerant of common punctuation variants like "Node.js" vs "nodejs"). */
 function skillsMentionedInJob(declaredSkills: string[], jobText: string): string[] {
@@ -152,7 +204,10 @@ export function tailorContentForJob(
   for (const job of reorderedExperience) {
     for (const sub of job.subsections) {
       sub.bullets.forEach((bullet, index) => {
-        if (jdSkills.some((s) => !bulletMentionsSkill(bullet.text, s))) {
+        const hasCompatibleMissingSkill = jdSkills.some(
+          (s) => !bulletMentionsSkill(bullet.text, s) && isSkillCompatibleWithBullet(s, bullet)
+        );
+        if (hasCompatibleMissingSkill) {
           candidates.push({ subsectionRef: sub.bullets, index, bullet, relevance: bulletRelevance(bullet, jobTags) });
         }
       });
@@ -164,7 +219,13 @@ export function tailorContentForJob(
   let injected = 0;
   for (const candidate of candidates) {
     if (injected >= MAX_TOTAL_INJECTIONS) break;
-    const missing = jdSkills.filter((s) => !bulletMentionsSkill(candidate.bullet.text, s));
+    // Compatibility gate is what fixed the "OracleDB in a fiber-optics
+    // bullet" problem — a skill is only a candidate for THIS bullet if it
+    // shares a real thematic tag with it, not just "the JD mentioned it and
+    // this bullet scored high overall."
+    const missing = jdSkills.filter(
+      (s) => !bulletMentionsSkill(candidate.bullet.text, s) && isSkillCompatibleWithBullet(s, candidate.bullet)
+    );
     if (missing.length === 0) continue;
     // Prefer whichever missing skill has been used least so far, for variety.
     missing.sort((a, b) => (usedSkillCounts.get(a) ?? 0) - (usedSkillCounts.get(b) ?? 0));
