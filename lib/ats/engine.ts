@@ -131,6 +131,21 @@ async function runJobInner(
   mkdirSync(dirname(target.screenshotPath), { recursive: true });
   await page.screenshot({ path: target.screenshotPath, fullPage: true }).catch(() => {});
 
+  // A real application form always has a resume upload field. If we never
+  // attached one, we didn't actually find the real form (e.g. scanFields
+  // picked up a few stray, non-required inputs on a marketing/listing page
+  // instead) — this must never be reported as ready_for_review, since that
+  // status implies a genuine, reviewable filled-out application exists.
+  if (!fileUploaded) {
+    return {
+      status: "failed",
+      failureReason: "unsupported_ats",
+      screenshotPath: target.screenshotPath,
+      notes: `${totalFilled} fields filled but no resume upload field found — this isn't the real application form (screenshot attached for diagnosis).`,
+      elapsedMs: Date.now() - start,
+    };
+  }
+
   const uniqueUnmatched = [...new Set(allUnmatched)];
   if (uniqueUnmatched.length > 0) {
     return {
