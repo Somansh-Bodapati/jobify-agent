@@ -57,3 +57,6 @@ next-env.d.ts
 /public/screenshots/
 /screenshots/
 
+# structured per-run logs (may reference personal form data)
+/logs/
+

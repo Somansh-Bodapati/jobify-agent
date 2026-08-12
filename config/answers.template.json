@@ -16,7 +16,7 @@
   "questionPatterns": [
     { "pattern": "first name", "field": "profile.firstName" },
     { "pattern": "last name", "field": "profile.lastName" },
-    { "pattern": "^name$|full name", "field": "profile.firstName + profile.lastName" },
+    { "pattern": "^name$|full name|legal name", "field": "profile.firstName + profile.lastName" },
     { "pattern": "email", "field": "profile.email" },
     { "pattern": "phone", "field": "profile.phone" },
     { "pattern": "linkedin", "field": "profile.linkedin" },

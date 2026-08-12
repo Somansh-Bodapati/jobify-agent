@@ -11,28 +11,35 @@ datasource db {
 }
 
 model Company {
-  id         String   @id @default(cuid())
-  name       String   @unique
-  slug       String   @unique
-  careersUrl String
-  atsType    String   @default("greenhouse") // greenhouse | lever | ashby | custom
-  active     Boolean  @default(true)
-  createdAt  DateTime @default(now())
-  jobs       Job[]
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  slug               String   @unique
+  careersUrl         String
+  atsType            String   @default("greenhouse") // greenhouse | lever | ashby | workday | custom | unknown
+  active             Boolean  @default(true)
+  consecutiveFailures Int     @default(0)
+  blocked            Boolean  @default(false)
+  lastFailureReason  String?
+  createdAt          DateTime @default(now())
+  jobs               Job[]
 }
 
 model Job {
-  id            String        @id @default(cuid())
-  externalId    String
-  companySlug   String
-  company       Company       @relation(fields: [companySlug], references: [slug])
-  title         String
-  url           String
-  location      String?
-  description   String?
-  postedAt      DateTime?
-  scrapedAt     DateTime      @default(now())
-  applications  Application[]
+  id                String        @id @default(cuid())
+  externalId        String
+  companySlug       String
+  company           Company       @relation(fields: [companySlug], references: [slug])
+  title             String
+  url               String
+  location          String?
+  description       String?
+  salaryMin         Int?
+  salaryMax         Int?
+  sponsorshipSignal String?       // "mentions_sponsorship" | "no_sponsorship" | "unknown"
+  source            String        @default("company_scrape") // "company_scrape" | "jobdatalake"
+  postedAt          DateTime?
+  scrapedAt         DateTime      @default(now())
+  applications      Application[]
 
   @@unique([externalId, companySlug])
 }

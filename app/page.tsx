@@ -3,11 +3,12 @@ import { prisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [companyCount, jobCount, applications, resumeVariants] = await Promise.all([
+  const [companyCount, jobCount, applications, resumeVariants, blockedCompanies] = await Promise.all([
     prisma.company.count({ where: { active: true } }),
     prisma.job.count(),
     prisma.application.findMany({ include: { job: { include: { company: true } }, resumeVariant: true } }),
     prisma.resumeVariant.findMany(),
+    prisma.company.findMany({ where: { blocked: true } }),
   ]);
 
   const byStatus = applications.reduce<Record<string, number>>((acc, a) => {
@@ -40,7 +41,17 @@ export default async function DashboardPage() {
         <StatCard label="Jobs tracked" value={jobCount} />
         <StatCard label="Ready for review" value={byStatus["ready_for_review"] ?? 0} />
         <StatCard label="Submitted" value={byStatus["submitted"] ?? 0} />
+        <StatCard label="Manual apply needed" value={byStatus["manual_apply_needed"] ?? 0} />
+        <StatCard label="Failed" value={byStatus["failed"] ?? 0} />
+        <StatCard label="Blocked companies" value={blockedCompanies.length} />
       </div>
+
+      {blockedCompanies.length > 0 && (
+        <div className="border border-red-900 bg-red-950 text-red-300 text-sm rounded-lg p-3">
+          Circuit breaker tripped for: {blockedCompanies.map((c) => `${c.name} (${c.lastFailureReason ?? "unknown"})`).join(", ")}.
+          Investigate manually, then reset with <code>npx tsx scripts/manage-companies.ts --unblock &quot;Name&quot;</code>.
+        </div>
+      )}
 
       <section>
         <h2 className="text-lg font-medium mb-3">Applications by resume</h2>
@@ -100,6 +111,7 @@ export function StatusBadge({ status }: { status: string }) {
     submitted: "bg-green-900 text-green-300",
     ready_for_review: "bg-amber-900 text-amber-300",
     skipped_no_match: "bg-neutral-800 text-neutral-400",
+    manual_apply_needed: "bg-blue-900 text-blue-300",
     failed: "bg-red-900 text-red-300",
   };
   return (

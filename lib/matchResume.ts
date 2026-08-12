@@ -30,11 +30,13 @@ const SENIORITY_EXCLUSIONS = [
   /\bdistinguished\b/i,
 ];
 
-export function matchResume(
+/** Same matching logic as matchResume, but also returns the numeric score so
+ * callers (eligible-jobs.ts) can rank jobs by match strength, not just filter. */
+export function matchResumeScored(
   jobTitle: string,
   jobDescription: string = "",
   resumes: ResumeConfig[] = loadResumeConfigs()
-): ResumeConfig | null {
+): { resume: ResumeConfig; score: number } | null {
   if (SENIORITY_EXCLUSIONS.some((re) => re.test(jobTitle))) return null;
 
   const haystack = `${jobTitle} ${jobDescription}`.toLowerCase();
@@ -58,5 +60,13 @@ export function matchResume(
     }
   }
 
-  return best ? best.resume : null;
+  return best;
+}
+
+export function matchResume(
+  jobTitle: string,
+  jobDescription: string = "",
+  resumes: ResumeConfig[] = loadResumeConfigs()
+): ResumeConfig | null {
+  return matchResumeScored(jobTitle, jobDescription, resumes)?.resume ?? null;
 }

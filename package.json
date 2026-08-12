@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup": "tsx scripts/setup.ts",
+    "scrape:greenhouse": "tsx scripts/scrape-greenhouse.ts",
+    "scrape:lever": "tsx scripts/scrape-lever.ts",
+    "scrape:ashby": "tsx scripts/scrape-ashby.ts",
+    "scrape:all": "npm run scrape:greenhouse && npm run scrape:lever && npm run scrape:ashby",
+    "apply": "tsx scripts/run-auto-apply.ts",
+    "test:apply": "tsx scripts/test-apply.ts",
+    "test:resumes": "tsx scripts/build-resume-variants.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

@@ -16,9 +16,20 @@ export function loadAnswersConfig(): AnswersConfig {
 export type SalaryFieldKind = "free_text" | "numeric_with_range" | "numeric_no_range" | "range_selector";
 
 export type MatchResult =
-  | { kind: "field"; value: string | boolean }
+  | { kind: "field"; value: string | boolean; comboboxHint: string }
   | { kind: "salary"; value: string; tier: { low: number; high: number } }
   | { kind: "unmatched" };
+
+/** Short text used to fuzzy-match against rendered dropdown/combobox option labels
+ * (e.g. Greenhouse react-select). Booleans become "Yes"/"No"; long free-text
+ * answers (like the sponsorship explanation) get a short-answer override. */
+function comboboxHintFor(field: string, value: string | boolean, profile: Profile): string {
+  if (field === "profile.workAuthorization.freeTextAnswer") {
+    return profile.workAuthorization.requiresSponsorshipFuture ? "Yes" : "No";
+  }
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  return value;
+}
 
 function resolveField(profile: Profile, path: string): string | boolean {
   if (path.includes(" + ")) {
@@ -72,7 +83,8 @@ export function matchQuestion(
       }
     }
 
-    return { kind: "field", value: resolveField(profile, field) };
+    const value = resolveField(profile, field);
+    return { kind: "field", value, comboboxHint: comboboxHintFor(field, value, profile) };
   }
 
   return { kind: "unmatched" };

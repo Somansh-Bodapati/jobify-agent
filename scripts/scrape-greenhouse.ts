@@ -4,6 +4,7 @@
  * CLI: npx tsx scripts/scrape-greenhouse.ts [CompanyName, CompanyName2, ...]
  */
 import { prisma } from "../lib/db";
+import { detectSponsorshipSignal } from "../lib/sponsorship";
 
 type GreenhouseJob = {
   id: number;
@@ -41,6 +42,7 @@ async function main() {
   for (const company of companies) {
     const jobs = await scrapeCompany(company.slug);
     for (const job of jobs) {
+      const sponsorshipSignal = detectSponsorshipSignal(job.title, job.content ?? "");
       await prisma.job.upsert({
         where: { externalId_companySlug: { externalId: String(job.id), companySlug: company.slug } },
         update: {
@@ -48,6 +50,7 @@ async function main() {
           url: job.absolute_url,
           location: job.location?.name ?? null,
           description: job.content ?? null,
+          sponsorshipSignal,
         },
         create: {
           externalId: String(job.id),
@@ -56,6 +59,8 @@ async function main() {
           url: job.absolute_url,
           location: job.location?.name ?? null,
           description: job.content ?? null,
+          sponsorshipSignal,
+          source: "company_scrape",
         },
       });
       totalUpserted++;
