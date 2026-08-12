@@ -16,6 +16,7 @@ export type EligibleJob = {
   resumeCategory: string;
   resumePdfPath: string;
   priorityScore: number;
+  postedAt: string | null;
 };
 
 function payScore(salaryMin: number | null, salaryMax: number | null, targetHigh: number): number {
@@ -25,8 +26,33 @@ function payScore(salaryMin: number | null, salaryMax: number | null, targetHigh
 }
 
 function sponsorshipScore(signal: string | null): number {
-  if (signal === "no_sponsorship") return -3;
-  if (signal === "mentions_sponsorship") return 1;
+  // Scaled up from the original -3/0/+1: at that magnitude a hard "no
+  // sponsorship" signal was negligible next to a 0-300 match score and
+  // barely deprioritized anything. -30/+5 actually moves the needle without
+  // being able to fully cancel out a strong match on its own.
+  if (signal === "no_sponsorship") return -30;
+  if (signal === "mentions_sponsorship") return 5;
+  return 0;
+}
+
+/**
+ * Bounded freshness bonus — a tie-breaker among comparable matches, never an
+ * override of a real match-quality gap. Capped at 40, well below what even a
+ * single extra matched keyword is typically worth (15-40) let alone a title
+ * match (+50) — so a fresh weak match cannot leapfrog a meaningfully better
+ * older match, but two similar-match jobs reorder toward the fresher one.
+ * Window sizes follow the "first 5 days matter most" pattern from
+ * job-application response-rate research; null postedAt (pre-dates the field,
+ * or a source that doesn't provide one) is neutral, not penalized.
+ */
+function recencyBonus(postedAt: Date | null): number {
+  if (!postedAt) return 0;
+  const hours = (Date.now() - postedAt.getTime()) / 3_600_000;
+  if (hours < 0) return 0; // clock skew / bad data — don't reward
+  if (hours <= 24) return 40;
+  if (hours <= 72) return 25;
+  if (hours <= 24 * 5) return 12;
+  if (hours <= 24 * 14) return 4;
   return 0;
 }
 
@@ -59,8 +85,9 @@ export async function getEligibleJobs(
   let skippedNoMatch = 0;
 
   for (const job of jobs) {
-    const alreadyApplied = job.applications.some((a) =>
-      ["submitted", "ready_for_review", "manual_apply_needed"].includes(a.status)
+    const alreadyApplied = job.applications.some(
+      (a) =>
+        ["submitted", "ready_for_review", "manual_apply_needed"].includes(a.status) || a.permanentlySkipped
     );
     if (alreadyApplied) {
       skippedApplied++;
@@ -75,7 +102,10 @@ export async function getEligibleJobs(
 
     const tier = salaryTierForState(profile, job.location ?? profile.state);
     const score =
-      match.score + payScore(job.salaryMin, job.salaryMax, tier.high) * 25 + sponsorshipScore(job.sponsorshipSignal);
+      match.score +
+      payScore(job.salaryMin, job.salaryMax, tier.high) * 25 +
+      sponsorshipScore(job.sponsorshipSignal) +
+      recencyBonus(job.postedAt);
 
     const entry: EligibleJob = {
       jobId: job.id,
@@ -88,6 +118,7 @@ export async function getEligibleJobs(
       resumeCategory: match.resume.category,
       resumePdfPath: match.resume.pdfPath,
       priorityScore: score,
+      postedAt: job.postedAt?.toISOString() ?? null,
     };
 
     if (SUPPORTED_ATS.has(job.company.atsType)) fillable.push(entry);

@@ -5,6 +5,7 @@
  */
 import { prisma } from "../lib/db";
 import { detectSponsorshipSignal } from "../lib/sponsorship";
+import { fetchWithRetry } from "../lib/fetchRetry";
 
 type AshbyJob = {
   id: string;
@@ -14,10 +15,11 @@ type AshbyJob = {
   location?: string;
   descriptionPlain?: string;
   compensationTierSummary?: string;
+  publishedAt?: string; // ISO string
 };
 
 async function scrapeCompany(slug: string): Promise<AshbyJob[]> {
-  const res = await fetch(`https://api.ashbyhq.com/posting-api/job-board/${slug}`);
+  const res = await fetchWithRetry(`https://api.ashbyhq.com/posting-api/job-board/${slug}`);
   if (!res.ok) throw new Error(`Ashby API error for ${slug}: ${res.status}`);
   const data = (await res.json()) as { jobs?: AshbyJob[] };
   return data.jobs ?? [];
@@ -47,6 +49,7 @@ async function main() {
       if (!url) continue;
       const description = job.descriptionPlain ?? "";
       const sponsorshipSignal = detectSponsorshipSignal(job.title, description);
+      const postedAt = job.publishedAt ? new Date(job.publishedAt) : null;
       await prisma.job.upsert({
         where: { externalId_companySlug: { externalId: job.id, companySlug: company.slug } },
         update: {
@@ -55,6 +58,7 @@ async function main() {
           location: job.location ?? null,
           description,
           sponsorshipSignal,
+          postedAt,
         },
         create: {
           externalId: job.id,
@@ -64,6 +68,7 @@ async function main() {
           location: job.location ?? null,
           description,
           sponsorshipSignal,
+          postedAt,
           source: "company_scrape",
         },
       });

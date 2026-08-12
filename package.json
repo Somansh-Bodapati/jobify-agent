@@ -14,7 +14,8 @@
     "scrape:all": "npm run scrape:greenhouse && npm run scrape:lever && npm run scrape:ashby",
     "apply": "tsx scripts/run-auto-apply.ts",
     "test:apply": "tsx scripts/test-apply.ts",
-    "test:resumes": "tsx scripts/build-resume-variants.ts"
+    "test:resumes": "tsx scripts/build-resume-variants.ts",
+    "report:unmatched": "tsx scripts/unmatched-questions-report.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

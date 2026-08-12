@@ -61,7 +61,9 @@ model Application {
   resumeVariantId String?
   resumeVariant   ResumeVariant? @relation(fields: [resumeVariantId], references: [id])
   dedupeId        String         @unique
-  status          String         // ready_for_review | submitted | skipped_no_match | failed
+  status          String         // ready_for_review | submitted | skipped_no_match | manual_apply_needed | failed
+  attempts        Int            @default(0)
+  permanentlySkipped Boolean     @default(false)
   screenshotPath  String?
   notes           String?
   appliedAt       DateTime       @default(now())

@@ -14,8 +14,21 @@ import { prisma } from "../lib/db";
 import { getEligibleJobs } from "../lib/eligibleJobs";
 import { runJob } from "../lib/ats/engine";
 import type { JobResult } from "../lib/ats/types";
+import { reportRecurringUnmatchedQuestions } from "../lib/unmatchedQuestions";
 
 const CIRCUIT_BREAKER_THRESHOLD = 3;
+const RETRY_CAP = 3;
+const NON_TRANSIENT_FAILURE_REASONS = new Set(["bot_detection", "unsupported_ats"]);
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Small randomized delay between applications so a run doesn't look like a
+ * bot hammering the same company back-to-back — 3-8s. */
+function humanPaceDelay() {
+  return sleep(3000 + Math.random() * 5000);
+}
 
 function loadApprovedCompanies(): Set<string> {
   const path = join(process.cwd(), "config/run-state.json");
@@ -31,13 +44,19 @@ async function recordApplication(input: {
   status: string;
   screenshotPath?: string;
   notes?: string;
+  failureReason?: string;
 }) {
   const resumeVariant = input.resumeCategory
     ? await prisma.resumeVariant.findUnique({ where: { category: input.resumeCategory } })
     : null;
-  await prisma.application.upsert({
+  const application = await prisma.application.upsert({
     where: { dedupeId: input.dedupeId },
-    update: { status: input.status, screenshotPath: input.screenshotPath ?? null, notes: input.notes ?? null },
+    update: {
+      status: input.status,
+      screenshotPath: input.screenshotPath ?? null,
+      notes: input.notes ?? null,
+      attempts: { increment: 1 },
+    },
     create: {
       jobId: input.jobId,
       resumeVariantId: resumeVariant?.id ?? null,
@@ -45,8 +64,25 @@ async function recordApplication(input: {
       status: input.status,
       screenshotPath: input.screenshotPath ?? null,
       notes: input.notes ?? null,
+      attempts: 1,
     },
   });
+
+  // Retry cap: a job that keeps failing for a non-transient reason (bot
+  // detection, unsupported ATS) after RETRY_CAP attempts is permanently
+  // skipped rather than retried forever. Transient failures (timeout,
+  // navigation_error) keep retrying indefinitely — that's just bad luck.
+  if (
+    input.status === "failed" &&
+    input.failureReason &&
+    NON_TRANSIENT_FAILURE_REASONS.has(input.failureReason) &&
+    application.attempts >= RETRY_CAP
+  ) {
+    await prisma.application.update({
+      where: { dedupeId: input.dedupeId },
+      data: { permanentlySkipped: true },
+    });
+  }
 }
 
 async function main() {
@@ -125,9 +161,12 @@ async function main() {
       status: result.status,
       screenshotPath: result.screenshotPath ? `public/screenshots/${job.companySlug}/${job.dedupeId}.png` : undefined,
       notes: result.notes,
+      failureReason: result.failureReason,
     });
 
     outcomes.push({ company: job.company, title: job.title, status: result.status, failureReason: result.failureReason });
+
+    await humanPaceDelay();
 
     // Circuit breaker: bot detection / timeout / stuck-form count as consecutive failures per company.
     const isBreakerFailure =
@@ -154,6 +193,8 @@ async function main() {
 
   await browser.close();
 
+  const recurringUnmatchedQuestions = await reportRecurringUnmatchedQuestions();
+
   const summary = {
     scanned: stats.scanned,
     processed: outcomes.length,
@@ -167,6 +208,7 @@ async function main() {
       return acc;
     }, {}),
     blockedThisRun: [...blockedThisRun],
+    recurringUnmatchedQuestions,
     outcomes,
   };
 

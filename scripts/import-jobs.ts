@@ -6,7 +6,10 @@
  * falling back to a slugified company name otherwise.
  *
  * CLI: npx tsx scripts/import-jobs.ts <path-to-json-file>
- * JSON shape: array of { id?, title, company, location?, salaryMin?, salaryMax?, skills?, url }
+ * JSON shape: array of { id?, title, company, location?, salaryMin?, salaryMax?, skills?, url, postedAt? }
+ * postedAt is optional (ISO string or anything Date() parses) — when the
+ * discovery step can't extract a posting date, omit it; the job just gets no
+ * recency bonus in ranking rather than blocking the import.
  */
 import { readFileSync } from "fs";
 import { prisma } from "../lib/db";
@@ -23,6 +26,7 @@ type ImportedJob = {
   salaryMax?: number;
   skills?: string[];
   url: string;
+  postedAt?: string;
 };
 
 function slugify(name: string): string {
@@ -68,6 +72,7 @@ async function main() {
     const description = job.skills?.length ? `Skills: ${job.skills.join(", ")}` : "";
     const sponsorshipSignal = detectSponsorshipSignal(job.title, description);
     const externalId = job.id ?? dedupeIdFromUrl(job.url);
+    const postedAt = job.postedAt ? new Date(job.postedAt) : null;
 
     await prisma.job.upsert({
       where: { externalId_companySlug: { externalId, companySlug: slug } },
@@ -79,6 +84,7 @@ async function main() {
         salaryMin: job.salaryMin ?? null,
         salaryMax: job.salaryMax ?? null,
         sponsorshipSignal,
+        postedAt,
       },
       create: {
         externalId,
@@ -90,6 +96,7 @@ async function main() {
         salaryMin: job.salaryMin ?? null,
         salaryMax: job.salaryMax ?? null,
         sponsorshipSignal,
+        postedAt,
         source: "jobdatalake",
       },
     });

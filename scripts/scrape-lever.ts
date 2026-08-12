@@ -5,6 +5,7 @@
  */
 import { prisma } from "../lib/db";
 import { detectSponsorshipSignal } from "../lib/sponsorship";
+import { fetchWithRetry } from "../lib/fetchRetry";
 
 type LeverPosting = {
   id: string;
@@ -13,10 +14,11 @@ type LeverPosting = {
   categories?: { location?: string };
   descriptionPlain?: string;
   salaryRange?: { min?: number; max?: number };
+  createdAt?: number; // epoch ms
 };
 
 async function scrapeCompany(slug: string): Promise<LeverPosting[]> {
-  const res = await fetch(`https://api.lever.co/v0/postings/${slug}?mode=json`);
+  const res = await fetchWithRetry(`https://api.lever.co/v0/postings/${slug}?mode=json`);
   if (!res.ok) throw new Error(`Lever API error for ${slug}: ${res.status}`);
   return (await res.json()) as LeverPosting[];
 }
@@ -43,6 +45,7 @@ async function main() {
     for (const job of postings) {
       const description = job.descriptionPlain ?? "";
       const sponsorshipSignal = detectSponsorshipSignal(job.text, description);
+      const postedAt = job.createdAt ? new Date(job.createdAt) : null;
       await prisma.job.upsert({
         where: { externalId_companySlug: { externalId: job.id, companySlug: company.slug } },
         update: {
@@ -53,6 +56,7 @@ async function main() {
           salaryMin: job.salaryRange?.min ?? null,
           salaryMax: job.salaryRange?.max ?? null,
           sponsorshipSignal,
+          postedAt,
         },
         create: {
           externalId: job.id,
@@ -64,6 +68,7 @@ async function main() {
           salaryMin: job.salaryRange?.min ?? null,
           salaryMax: job.salaryRange?.max ?? null,
           sponsorshipSignal,
+          postedAt,
           source: "company_scrape",
         },
       });

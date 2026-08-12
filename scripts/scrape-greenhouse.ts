@@ -5,6 +5,7 @@
  */
 import { prisma } from "../lib/db";
 import { detectSponsorshipSignal } from "../lib/sponsorship";
+import { fetchWithRetry } from "../lib/fetchRetry";
 
 type GreenhouseJob = {
   id: number;
@@ -16,7 +17,7 @@ type GreenhouseJob = {
 };
 
 async function scrapeCompany(slug: string) {
-  const res = await fetch(`https://boards-api.greenhouse.io/v1/boards/${slug}/jobs?content=true`);
+  const res = await fetchWithRetry(`https://boards-api.greenhouse.io/v1/boards/${slug}/jobs?content=true`);
   if (!res.ok) throw new Error(`Greenhouse API error for ${slug}: ${res.status}`);
   const data = (await res.json()) as { jobs: GreenhouseJob[] };
   return data.jobs;
@@ -43,6 +44,7 @@ async function main() {
     const jobs = await scrapeCompany(company.slug);
     for (const job of jobs) {
       const sponsorshipSignal = detectSponsorshipSignal(job.title, job.content ?? "");
+      const postedAt = job.updated_at ? new Date(job.updated_at) : null;
       await prisma.job.upsert({
         where: { externalId_companySlug: { externalId: String(job.id), companySlug: company.slug } },
         update: {
@@ -51,6 +53,7 @@ async function main() {
           location: job.location?.name ?? null,
           description: job.content ?? null,
           sponsorshipSignal,
+          postedAt,
         },
         create: {
           externalId: String(job.id),
@@ -60,6 +63,7 @@ async function main() {
           location: job.location?.name ?? null,
           description: job.content ?? null,
           sponsorshipSignal,
+          postedAt,
           source: "company_scrape",
         },
       });
