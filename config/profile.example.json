@@ -1,0 +1,27 @@
+{
+  "firstName": "REPLACE_ME",
+  "lastName": "REPLACE_ME",
+  "email": "REPLACE_ME",
+  "phone": "REPLACE_ME",
+  "linkedin": "REPLACE_ME",
+  "github": "REPLACE_ME",
+  "city": "REPLACE_ME",
+  "state": "REPLACE_ME",
+  "country": "United States",
+  "workAuthorization": {
+    "authorizedToWorkInUS": true,
+    "requiresSponsorshipNow": false,
+    "requiresSponsorshipFuture": true
+  },
+  "selfIdentification": {
+    "gender": "Decline to state",
+    "raceEthnicity": "Decline to state",
+    "veteranStatus": "I am not a protected veteran",
+    "disabilityStatus": "No, I do not have a disability"
+  },
+  "availability": {
+    "noticePeriod": "2 weeks",
+    "relocation": true,
+    "remote": true
+  }
+}

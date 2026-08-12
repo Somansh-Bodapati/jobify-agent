@@ -1,0 +1,79 @@
+{
+  "notes": "AI-drafted from resume content + common ATS question patterns. Review and edit freely — nothing here is final. Real PII/self-ID/salary numbers live in config/profile.local.json (gitignored), merged in at runtime by match-question.ts.",
+
+  "countryAliases": {
+    "united states": ["usa", "us", "u.s.", "u.s.a.", "united states of america"],
+    "united states of america": ["usa", "us", "u.s.", "u.s.a.", "united states"]
+  },
+
+  "salaryRules": {
+    "freeTextField": "profile.salary.freeTextAnswer",
+    "numericFieldWithVisibleRange": "use the high end of the range shown on the form",
+    "numericFieldNoRange": "use profile.salary.tiers[<state>].high (fallback DEFAULT tier)",
+    "rangeSelectorField": "select the band matching profile.salary.tiers[<state>]"
+  },
+
+  "questionPatterns": [
+    { "pattern": "first name", "field": "profile.firstName" },
+    { "pattern": "last name", "field": "profile.lastName" },
+    { "pattern": "^name$|full name", "field": "profile.firstName + profile.lastName" },
+    { "pattern": "email", "field": "profile.email" },
+    { "pattern": "phone", "field": "profile.phone" },
+    { "pattern": "linkedin", "field": "profile.linkedin" },
+    { "pattern": "github|portfolio|website", "field": "profile.github" },
+    { "pattern": "city", "field": "profile.city" },
+    { "pattern": "state|province", "field": "profile.state" },
+    { "pattern": "country", "field": "profile.country", "aliasGroup": "countryAliases" },
+    { "pattern": "authorized to work|work authorization|legally authorized", "field": "profile.workAuthorization.authorizedToWorkInUS" },
+    { "pattern": "require.*sponsorship|need.*sponsorship|visa sponsorship", "field": "profile.workAuthorization.freeTextAnswer" },
+    { "pattern": "gender|sex\\b", "field": "profile.selfIdentification.gender" },
+    { "pattern": "race|ethnicity", "field": "profile.selfIdentification.raceEthnicity" },
+    { "pattern": "veteran", "field": "profile.selfIdentification.veteranStatus" },
+    { "pattern": "disability", "field": "profile.selfIdentification.disabilityStatus" },
+    { "pattern": "start date|when.*available|notice period", "field": "profile.availability.startDateAnswer" },
+    { "pattern": "relocat", "field": "profile.availability.relocation" },
+    { "pattern": "remote", "field": "profile.availability.remote" },
+    { "pattern": "salary|compensation|pay expectation", "field": "salaryRules" }
+  ],
+
+  "roleAnswers": {
+    "software-engineer": {
+      "whyThisCompany": "I've been following the product closely and I'm drawn to the pace and quality bar here — I want to build front-end systems that a large user base relies on daily, and this team is clearly solving that at scale.",
+      "whyThisRole": "This role lines up with what I've spent the last two years doing: building React and Angular interfaces on top of complex APIs and shipping them into production for regulated, high-traffic systems.",
+      "tellMeAboutYourself": "I'm a software engineer with 2+ years building scalable, user-facing applications, most recently on a GenAI policy-alignment platform at Citi where I build the React interfaces that surface AI-generated scoring and recommendations. Before that I worked on a 20+ micro-frontend Angular ecosystem, and earlier I did low-level networking work at a hardware startup that went through UC Berkeley SkyDeck. I like working close to the API boundary and turning complex backend logic into interfaces people can actually use.",
+      "greatestStrength": "Turning ambiguous, cross-team requirements into working UI fast — I've partnered with separate Python GenAI and Java services teams to ship end-to-end assessment workflows without needing every backend detail nailed down first.",
+      "greatestWeakness": "I used to over-invest in component abstraction early; I've since learned to build the concrete version first and only extract a reusable pattern once it repeats, which has made my code reviews faster and my components easier for teammates to follow.",
+      "whyAreYouLeaving": "I'm looking for a team where I can go deeper on product ownership and work in a faster-moving, less heavily-processed environment than a large regulated enterprise engagement.",
+      "technicalHighlight": "I designed and shipped a micro-frontend Angular module inside a 20+ MFE ecosystem using Webpack Module Federation, integrating 8+ backend microservices and improving load performance by ~35% through caching and API orchestration."
+    },
+    "backend-developer": {
+      "whyThisCompany": "I want to work on backend systems that operate at real scale, and this team's approach to platform/API design is exactly the kind of engineering rigor I want to be around.",
+      "whyThisRole": "I've spent the last two years working across the frontend/backend boundary — integrating with Java and Python services, designing API orchestration, and building the entitlement and workflow logic that backend systems depend on — and I want to move further into that side.",
+      "tellMeAboutYourself": "I'm a software engineer with 2+ years of experience across enterprise and startup environments. At Citi I partner directly with a Python GenAI services team and a Java document/application services team to ship assessment workflows end-to-end, and I built a configurable approval workflow engine (5 stages, 8 roles) and a role-based entitlement system with 50+ mapped actions. Earlier, I worked on kernel-level networking components in Rust/eBPF at a hardware startup. I'm looking to spend more of my time on the service and API side of systems like these.",
+      "greatestStrength": "Designing systems for auditability and correctness under real constraints — the approval workflow engine I built supports full auditability and regulatory compliance across 5 stages and 8 roles, which required getting the state model right up front.",
+      "greatestWeakness": "Early on I underestimated how much time to budget for integration testing across services I didn't own; I now build in explicit contract-testing time whenever a feature spans multiple backend teams.",
+      "whyAreYouLeaving": "I want to spend more of my day-to-day on backend/API design rather than primarily UI, and I'm looking for a smaller, faster-moving team where I can own more of the service layer.",
+      "technicalHighlight": "I engineered a configurable approval workflow engine supporting 5 stages, 8 roles, and granular permissions for an enterprise reporting platform, and built a role-based entitlement system mapping 50+ actions while maintaining 90%+ Jest test coverage."
+    },
+    "ai-engineer": {
+      "whyThisCompany": "AI-driven products are where I want to build long-term, and this company is shipping some of the most interesting applied AI work in the industry right now — I want to be part of that.",
+      "whyThisRole": "I'm currently one of two frontend engineers on a GenAI policy-alignment platform, working directly with a Python GenAI services team on LLM-based agent workflows that orchestrate assessment kickoff, result generation, and remediation planning — I want to move closer to that applied AI work full-time.",
+      "tellMeAboutYourself": "I'm a software engineer who's spent the last year working hands-on with GenAI-powered platforms. At Citi, I build the interfaces that surface AI-generated alignment scores and recommendations, and I contribute directly to LLM-based agent workflows that drive assessment and remediation planning. Before that I did low-level systems work — kernel networking in Rust/eBPF — and I was selected for the UC Berkeley SkyDeck accelerator. I'm looking to move further into applied AI engineering.",
+      "greatestStrength": "Bridging AI systems and the people who use them — I've built the UI layer that makes AI-generated scoring and recommendations actually actionable for non-technical users, which requires understanding both the model output and the human workflow around it.",
+      "greatestWeakness": "I'm still building depth on the model/training side relative to my applied-integration experience, so I've been deliberately spending personal project time on that gap.",
+      "whyAreYouLeaving": "I want to work somewhere where applied AI is the core product, not a component of a larger enterprise platform, so I can go deeper on the parts I'm most drawn to.",
+      "technicalHighlight": "I contribute to LLM-based agent workflows that orchestrate assessment kickoff, AI-generated result scoring, and downstream remediation planning on a GenAI policy-alignment platform used across a cross-functional org."
+    }
+  },
+
+  "generalAnswers": {
+    "managementStyle": "I do my best work with a manager who sets clear priorities and context up front, then trusts me to work through the implementation details and asks good questions in reviews rather than prescribing the how.",
+    "conflictResolution": "I bring disagreements back to the shared goal and concrete tradeoffs rather than opinions — on a recent cross-team integration I disagreed with a proposed API contract, so I wrote up the two options with their tradeoffs and we picked one together in 15 minutes instead of going back and forth over Slack.",
+    "learningApproach": "I learn best by building something real with a new tool immediately rather than reading documentation end-to-end first — I picked up LLM agent workflow patterns this way while contributing to my current team's GenAI platform.",
+    "diversityAndInclusion": "I've worked on small cross-functional teams where clear communication and actively inviting quieter teammates into design discussions made a real difference in decision quality, and I try to carry that forward on every team I join.",
+    "fiveYearVision": "I want to be deep in applied AI engineering, owning systems end-to-end rather than a single layer of the stack, and mentoring engineers earlier in their careers the way senior engineers on my current team have mentored me.",
+    "uniqueness": "I've worked across the full stack of a regulated GenAI platform — frontend, API orchestration, and workflow/entitlement design — which gives me a practical sense of how AI features actually need to be built to be usable and auditable, not just impressive in a demo.",
+    "handlingFailure": "Early in my current role I shipped a caching change that improved load time but introduced a stale-data edge case; I rolled it back within the day, added a regression test for that exact case, and now default to feature-flagging performance changes so I can roll back instantly if something similar happens.",
+    "stayingCurrent": "I follow changes in the Angular/React ecosystems directly through release notes and RFCs, and I stay current on applied AI by building small personal projects with new agent/LLM tooling rather than only reading about it."
+  }
+}

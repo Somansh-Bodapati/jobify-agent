@@ -1,0 +1,58 @@
+[
+  {
+    "category": "software-engineer",
+    "label": "Software Engineer / Frontend",
+    "pdfPath": "public/resumes/software-engineer.pdf",
+    "keywords": [
+      "software engineer",
+      "frontend engineer",
+      "front-end engineer",
+      "front end developer",
+      "react",
+      "angular",
+      "ui engineer",
+      "web developer",
+      "full stack engineer",
+      "full-stack developer",
+      "javascript engineer",
+      "typescript engineer",
+      "member of technical staff"
+    ]
+  },
+  {
+    "category": "backend-developer",
+    "label": "Backend Developer",
+    "pdfPath": "public/resumes/backend-developer.pdf",
+    "keywords": [
+      "backend engineer",
+      "backend developer",
+      "back-end engineer",
+      "server-side engineer",
+      "api engineer",
+      "distributed systems engineer",
+      "platform engineer",
+      "infrastructure engineer",
+      "software engineer, backend",
+      "java engineer",
+      "microservices engineer"
+    ]
+  },
+  {
+    "category": "ai-engineer",
+    "label": "AI Engineer",
+    "pdfPath": "public/resumes/ai-engineer.pdf",
+    "keywords": [
+      "ai engineer",
+      "machine learning engineer",
+      "ml engineer",
+      "applied ai engineer",
+      "genai engineer",
+      "llm engineer",
+      "agent engineer",
+      "applied scientist",
+      "ai platform engineer",
+      "prompt engineer",
+      "research engineer, ai"
+    ]
+  }
+]

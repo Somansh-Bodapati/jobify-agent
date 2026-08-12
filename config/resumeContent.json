@@ -1,0 +1,110 @@
+{
+  "name": "Somansh Bodapati",
+  "contact": {
+    "email": "somansh.bodapati@gmail.com",
+    "phone": "+1 (831) 854-6568",
+    "location": "Irving, TX",
+    "linkedinLabel": "linkedin.com/in/somansh-bodapati-26ab0b222",
+    "linkedinUrl": "https://linkedin.com/in/somansh-bodapati-26ab0b222",
+    "githubLabel": "github.com/Somansh-Bodapati",
+    "githubUrl": "https://github.com/Somansh-Bodapati"
+  },
+  "skillGroups": {
+    "programming": {
+      "label": "Programming",
+      "items": ["Angular (16+)", "React", "TypeScript", "RxJS", "NgRx", "JavaScript", "HTML5", "CSS", "SASS", "Python", "Java", "Jest", "RESTful APIs", "OAuth", "SpringBoot", "Bootstrap", "OracleDB", "MongoDB"]
+    },
+    "architecture": {
+      "label": "Architecture & UI",
+      "items": ["Micro Frontends", "Webpack Module Federation", "Design Systems", "Reusable Component Libraries", "Figma"]
+    },
+    "ai": {
+      "label": "AI/GenAI",
+      "items": ["Python GenAI Services", "LLM Agent Workflows"]
+    },
+    "devops": {
+      "label": "DevOps & Tools",
+      "items": ["Git/GitHub", "VSCode", "Agile/Scrum", "Jira", "Docker", "Kubernetes", "TDD/BDD", "CI/CD", "Jenkins"]
+    }
+  },
+  "experience": [
+    {
+      "title": "Frontend Engineer (Angular) – Citi (Client) | Scadea Solutions",
+      "location": "Irving, TX",
+      "dates": "Oct 2024 – Present",
+      "subsections": [
+        {
+          "heading": "Policy Alignment Hub (GenAI Platform)",
+          "bullets": [
+            "Serve as one of two frontend engineers on a cross-functional team building a policy alignment platform that centralizes organizational policy ingestion, giving each user a personal dashboard to manage documents and launch AI-driven assessments.",
+            "Build React interfaces surfacing AI-generated alignment scores and recommendation text that help users compare uploaded documents against defined regulatory and industry-standard criteria.",
+            "Partner with a Python GenAI services team (assessment/scoring engine) and a Java team (document and application services) to ship assessment workflows end-to-end.",
+            "Contribute to LLM-based agent workflows that orchestrate assessment kickoff, result generation, and downstream remediation planning."
+          ]
+        },
+        {
+          "heading": "ERM Reports Orchestration Platform",
+          "bullets": [
+            "Designed, implemented, and tested a micro-frontend Angular module within a 20+ MFE ecosystem using Webpack Module Federation, integrating 8+ backend microservices and improving load performance ~35% through caching and optimized API orchestration.",
+            "Engineered a configurable approval workflow engine supporting 5 stages, 8 roles, and granular permissions — enabling full auditability and regulatory compliance for enterprise reporting.",
+            "Built reusable UI framework components (dashboards, tables, modals) and a role-based entitlement system (50+ mapped actions), maintaining 90%+ Jest test coverage through unit and integration testing, and contributing to framework upgrades and codebase refactoring."
+          ]
+        },
+        {
+          "heading": "Risk Management Portal",
+          "bullets": [
+            "Developed Angular dashboards with responsive, accessible UI for reconciliation validation across financial systems, supporting 500+ Risk & Compliance users in detecting data discrepancies and breach scenarios.",
+            "Connected front-end features to back-end systems via RESTful API integrations; implemented transaction-level drill-down views and execution controls, handling error responses and edge cases to maintain product stability."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Software Engineer Intern | Light Links",
+      "location": "Santa Cruz, CA",
+      "dates": "Jan 2024 – Oct 2024",
+      "subsections": [
+        {
+          "bullets": [
+            "Built mobility control protocol logic enabling seamless handoff between visible-light transmitters with zero perceptible data loss; contributed to low-level debugging and performance testing in a real-time networking environment.",
+            "Developed kernel-level networking components using Rust and eBPF to optimize packet handling and latency for hybrid Wi-Fi/light-based communication systems.",
+            "Built personal projects using React, focusing on component-based UI development, state management, and integration testing — applying front-end fundamentals outside of core work responsibilities.",
+            "Selected for UC Berkeley SkyDeck accelerator (Sep 2024 cohort), collaborating with researchers and industry mentors."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Learning Technologies Assistant | UC Santa Cruz",
+      "location": "Santa Cruz, CA",
+      "dates": "May 2022 – Jan 2024",
+      "subsections": [
+        {
+          "bullets": [
+            "Developed a media inventory management website that improved workflow speed by 90% and streamlined setup of networks, live streaming, and recording for campus events."
+          ]
+        }
+      ]
+    }
+  ],
+  "education": [
+    { "school": "University of California, Santa Cruz — B.S. Computer Science", "dates": "Graduated: June 2024" }
+  ],
+  "certifications": [
+    { "label": "IBM Software Engineering and DevOps — Credential" }
+  ],
+  "categories": {
+    "software-engineer": {
+      "summary": "Software Developer with 2+ years of experience building scalable, user-focused applications across enterprise and startup environments, spanning front-end development and, more recently, GenAI-powered platforms. Proven ability to design and implement front-end interfaces, integrate APIs, debug production issues, and deliver clean, maintainable code within Agile teams. Experienced with Angular, React, JavaScript, HTML/CSS, Python-based GenAI services, and complex, regulated systems.",
+      "skillOrder": ["programming", "architecture", "ai", "devops"]
+    },
+    "backend-developer": {
+      "summary": "Software Developer with 2+ years of experience across enterprise and startup environments, building API-driven, service-oriented systems alongside Java and Python backend teams. Proven ability to design workflow engines, entitlement systems, and API orchestration layers, integrate 8+ backend microservices, and deliver clean, maintainable code within Agile teams. Experienced with Java, Python, SpringBoot, RESTful APIs, OracleDB, MongoDB, and complex, regulated systems.",
+      "skillOrder": ["programming", "devops", "architecture", "ai"]
+    },
+    "ai-engineer": {
+      "summary": "Software Developer with 2+ years of experience building scalable applications, now focused on GenAI-powered platforms. Proven ability to build the interfaces and agent workflows around LLM-based systems — partnering directly with Python GenAI services teams on assessment/scoring engines and contributing to agent workflows that orchestrate assessment kickoff, result generation, and remediation planning. Experienced with Python GenAI services, LLM agent workflows, React, Angular, and complex, regulated systems.",
+      "skillOrder": ["ai", "programming", "architecture", "devops"]
+    }
+  }
+}

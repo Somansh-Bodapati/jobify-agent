@@ -1,0 +1,22 @@
+[
+  { "name": "Anthropic", "slug": "anthropic", "careersUrl": "https://www.anthropic.com/careers" },
+  { "name": "OpenAI", "slug": "openai", "careersUrl": "https://openai.com/careers" },
+  { "name": "Meta", "slug": "meta", "careersUrl": "https://www.metacareers.com" },
+  { "name": "Google", "slug": "google", "careersUrl": "https://careers.google.com" },
+  { "name": "Apple", "slug": "apple", "careersUrl": "https://www.apple.com/careers" },
+  { "name": "Microsoft", "slug": "microsoft", "careersUrl": "https://careers.microsoft.com" },
+  { "name": "Netflix", "slug": "netflix", "careersUrl": "https://explore.jobs.netflix.net" },
+  { "name": "Stripe", "slug": "stripe", "careersUrl": "https://stripe.com/jobs" },
+  { "name": "Figma", "slug": "figma", "careersUrl": "https://www.figma.com/careers" },
+  { "name": "Gamma", "slug": "gamma", "careersUrl": "https://gamma.app/careers" },
+  { "name": "Notion", "slug": "notion", "careersUrl": "https://www.notion.so/careers" },
+  { "name": "Vercel", "slug": "vercel", "careersUrl": "https://vercel.com/careers" },
+  { "name": "Coinbase", "slug": "coinbase", "careersUrl": "https://www.coinbase.com/careers" },
+  { "name": "Airbnb", "slug": "airbnb", "careersUrl": "https://careers.airbnb.com" },
+  { "name": "Pinterest", "slug": "pinterest", "careersUrl": "https://www.pinterestcareers.com" },
+  { "name": "Databricks", "slug": "databricks", "careersUrl": "https://www.databricks.com/company/careers" },
+  { "name": "Robinhood", "slug": "robinhood", "careersUrl": "https://careers.robinhood.com" },
+  { "name": "Lyft", "slug": "lyft", "careersUrl": "https://www.lyft.com/careers" },
+  { "name": "Dropbox", "slug": "dropbox", "careersUrl": "https://www.dropbox.com/jobs" },
+  { "name": "Salesforce", "slug": "salesforce", "careersUrl": "https://www.salesforce.com/company/careers" }
+]
