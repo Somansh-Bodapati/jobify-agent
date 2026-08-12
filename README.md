@@ -52,7 +52,7 @@ Bot-walls (Cloudflare challenges, hCaptcha, reCAPTCHA challenge frames) are dete
 | Script | Purpose |
 |---|---|
 | `scripts/setup.ts` | One-command bootstrap (migrate, validate, seed, build resumes) |
-| `scripts/validate-companies.ts` | Probes each `config/companies.json` candidate on its hinted ATS, seeds `Company` |
+| `scripts/validate-companies.ts` | Probes each `config/companies.json` candidate on its hinted ATS, falls back to the other two on failure, seeds `Company`. Writes `logs/validation-fallback-matches.json` (matched on an unhinted platform — verify once) and `logs/validation-unresolved.json` (resolved nowhere, with per-company next-step guidance) every run — nothing just silently disappears |
 | `scripts/scrape-greenhouse.ts` / `scrape-lever.ts` / `scrape-ashby.ts` | Per-platform job scrapers, upsert-with-dedup |
 | `scripts/import-jobs.ts` | Imports broadly-discovered jobs (e.g. from JobDataLake) into the same `Job` table |
 | `scripts/eligible-jobs.ts` | Dedup + resume matching + priority ranking (match score, pay-vs-target, sponsorship signal) |
@@ -66,4 +66,4 @@ Bot-walls (Cloudflare challenges, hCaptcha, reCAPTCHA challenge frames) are dete
 
 ## Personal data
 
-`config/profile.local.json` (real contact info, work authorization, self-identification, salary tiers) is gitignored and never committed. `config/profile.example.json` is the template. `config/answers.template.json` holds AI-drafted role/general Q&A grounded in the resume — review and edit freely. Screenshots (`public/screenshots/`) and run logs (`logs/`) are also gitignored since they can contain personal form data.
+`config/profile.local.json` (real contact info, work authorization, self-identification, salary tiers) is gitignored and never committed. `config/profile.example.json` is the template. `config/answers.template.json` holds AI-drafted role/general Q&A grounded in the resume — review and edit freely. Screenshots (`public/screenshots/<company-slug>/<dedupeId>.png`) and run logs (`logs/`) are also gitignored since they can contain personal form data — the `/applications` dashboard page shows a clickable thumbnail of each application's screenshot directly, so you don't need to dig through the filesystem to review one.

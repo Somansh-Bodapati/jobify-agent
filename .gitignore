@@ -60,3 +60,6 @@ next-env.d.ts
 # structured per-run logs (may reference personal form data)
 /logs/
 
+# claude code isolated agent worktrees (ephemeral tooling state)
+/.claude/worktrees/
+

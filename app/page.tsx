@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import { StatusBadge } from "./components/StatusBadge";
+import { screenshotUrl } from "@/lib/screenshotUrl";
 
 export const dynamic = "force-dynamic";
 
@@ -33,90 +35,101 @@ export default async function DashboardPage() {
     .slice(0, 10);
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col gap-8">
-      <h1 className="text-2xl font-semibold">Dashboard</h1>
+    <div className="flex flex-col gap-10">
+      <div>
+        <div className="text-xs font-mono uppercase tracking-widest text-text-faint mb-1">Mission control</div>
+        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+      </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Active companies" value={companyCount} />
-        <StatCard label="Jobs tracked" value={jobCount} />
-        <StatCard label="Ready for review" value={byStatus["ready_for_review"] ?? 0} />
-        <StatCard label="Submitted" value={byStatus["submitted"] ?? 0} />
-        <StatCard label="Manual apply needed" value={byStatus["manual_apply_needed"] ?? 0} />
-        <StatCard label="Failed" value={byStatus["failed"] ?? 0} />
-        <StatCard label="Blocked companies" value={blockedCompanies.length} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Readout label="Active companies" value={companyCount} color="var(--accent)" />
+        <Readout label="Jobs tracked" value={jobCount} color="var(--status-manual)" />
+        <Readout label="Ready for review" value={byStatus["ready_for_review"] ?? 0} color="var(--status-review)" />
+        <Readout label="Submitted" value={byStatus["submitted"] ?? 0} color="var(--status-submitted)" />
+        <Readout label="Manual apply needed" value={byStatus["manual_apply_needed"] ?? 0} color="var(--status-manual)" />
+        <Readout label="Failed" value={byStatus["failed"] ?? 0} color="var(--status-failed)" />
+        <Readout label="Blocked companies" value={blockedCompanies.length} color="var(--status-failed)" />
       </div>
 
       {blockedCompanies.length > 0 && (
-        <div className="border border-red-900 bg-red-950 text-red-300 text-sm rounded-lg p-3">
-          Circuit breaker tripped for: {blockedCompanies.map((c) => `${c.name} (${c.lastFailureReason ?? "unknown"})`).join(", ")}.
-          Investigate manually, then reset with <code>npx tsx scripts/manage-companies.ts --unblock &quot;Name&quot;</code>.
+        <div className="card border-l-2 p-4 text-sm" style={{ borderLeftColor: "var(--status-failed)" }}>
+          <div className="font-mono text-xs uppercase tracking-wide mb-1" style={{ color: "var(--status-failed)" }}>
+            Circuit breaker tripped
+          </div>
+          <div className="text-text-muted">
+            {blockedCompanies.map((c) => `${c.name} (${c.lastFailureReason ?? "unknown"})`).join(", ")}. Investigate manually, then reset with{" "}
+            <code className="text-text bg-surface-raised px-1.5 py-0.5 rounded font-mono text-xs">
+              npx tsx scripts/manage-companies.ts --unblock &quot;Name&quot;
+            </code>
+          </div>
         </div>
       )}
 
-      <section>
-        <h2 className="text-lg font-medium mb-3">Applications by resume</h2>
-        <div className="flex flex-col gap-2">
+      <section className="card p-5">
+        <h2 className="text-sm font-mono uppercase tracking-wide text-text-muted mb-4">Applications by resume</h2>
+        <div className="flex flex-col">
           {byResume.map((r) => (
-            <div key={r.label} className="flex justify-between border-b border-neutral-800 py-1 text-sm">
+            <div key={r.label} className="flex justify-between border-b border-border-soft py-2 text-sm last:border-0">
               <span>{r.label}</span>
-              <span className="text-neutral-400">{r.count}</span>
+              <span className="data-cell text-text-muted">{r.count}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section>
-        <h2 className="text-lg font-medium mb-3">Applications by company</h2>
-        <div className="flex flex-col gap-2">
-          {byCompany.length === 0 && <p className="text-neutral-500 text-sm">No applications yet.</p>}
+      <section className="card p-5">
+        <h2 className="text-sm font-mono uppercase tracking-wide text-text-muted mb-4">Applications by company</h2>
+        <div className="flex flex-col">
+          {byCompany.length === 0 && <p className="text-text-faint text-sm">No applications yet.</p>}
           {byCompany.map(([name, count]) => (
-            <div key={name} className="flex justify-between border-b border-neutral-800 py-1 text-sm">
+            <div key={name} className="flex justify-between border-b border-border-soft py-2 text-sm last:border-0">
               <span>{name}</span>
-              <span className="text-neutral-400">{count}</span>
+              <span className="data-cell text-text-muted">{count}</span>
             </div>
           ))}
         </div>
       </section>
 
-      <section>
-        <h2 className="text-lg font-medium mb-3">Recent activity</h2>
-        <div className="flex flex-col gap-2">
-          {recent.length === 0 && <p className="text-neutral-500 text-sm">Nothing yet — run /auto-apply.</p>}
-          {recent.map((a) => (
-            <div key={a.id} className="flex justify-between border-b border-neutral-800 py-2 text-sm">
-              <div>
-                <div className="font-medium">{a.job.title}</div>
-                <div className="text-neutral-500">{a.job.company.name} · {a.resumeVariant?.label ?? "—"}</div>
+      <section className="card p-5">
+        <h2 className="text-sm font-mono uppercase tracking-wide text-text-muted mb-4">Recent activity</h2>
+        <div className="flex flex-col">
+          {recent.length === 0 && <p className="text-text-faint text-sm">Nothing yet — run /auto-apply.</p>}
+          {recent.map((a) => {
+            const shot = screenshotUrl(a.screenshotPath);
+            return (
+              <div key={a.id} className="flex items-center justify-between gap-4 border-b border-border-soft py-3 text-sm last:border-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  {shot ? (
+                    <a href={shot} target="_blank" className="shrink-0">
+                      <img src={shot} alt="" className="w-10 h-10 object-cover object-top rounded border border-border" />
+                    </a>
+                  ) : (
+                    <div className="w-10 h-10 rounded border border-border-soft shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <a href={a.job.url} target="_blank" className="link-row font-medium block truncate">
+                      {a.job.title}
+                    </a>
+                    <div className="text-text-muted text-xs truncate">
+                      {a.job.company.name} · {a.resumeVariant?.label ?? "—"}
+                    </div>
+                  </div>
+                </div>
+                <StatusBadge status={a.status} />
               </div>
-              <StatusBadge status={a.status} />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function Readout({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div className="border border-neutral-800 rounded-lg p-4">
-      <div className="text-2xl font-semibold">{value}</div>
-      <div className="text-neutral-400 text-sm">{label}</div>
+    <div className="readout" style={{ "--stat-color": color } as React.CSSProperties}>
+      <div className="value">{value}</div>
+      <div className="label">{label}</div>
     </div>
-  );
-}
-
-export function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    submitted: "bg-green-900 text-green-300",
-    ready_for_review: "bg-amber-900 text-amber-300",
-    skipped_no_match: "bg-neutral-800 text-neutral-400",
-    manual_apply_needed: "bg-blue-900 text-blue-300",
-    failed: "bg-red-900 text-red-300",
-  };
-  return (
-    <span className={`px-2 py-0.5 rounded text-xs h-fit ${colors[status] ?? "bg-neutral-800"}`}>
-      {status.replace(/_/g, " ")}
-    </span>
   );
 }

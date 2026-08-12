@@ -24,14 +24,20 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-neutral-950 text-neutral-100">
-        <nav className="border-b border-neutral-800 px-6 py-3 flex gap-6 text-sm">
-          <Link href="/" className="font-semibold">Jobify Agent</Link>
-          <Link href="/applications" className="text-neutral-400 hover:text-neutral-100">Applications</Link>
-          <Link href="/resumes" className="text-neutral-400 hover:text-neutral-100">Resumes</Link>
-          <Link href="/profile" className="text-neutral-400 hover:text-neutral-100">Profile</Link>
+      <body className="min-h-full flex flex-col">
+        <nav className="border-b border-border px-6 py-4 flex items-center gap-8 text-sm sticky top-0 z-10 backdrop-blur-md bg-ink/85">
+          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            <span className="inline-block w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" />
+            Jobify Agent
+          </Link>
+          <div className="flex gap-6">
+            <Link href="/" className="text-text-muted hover:text-accent transition-colors">Overview</Link>
+            <Link href="/applications" className="text-text-muted hover:text-accent transition-colors">Applications</Link>
+            <Link href="/resumes" className="text-text-muted hover:text-accent transition-colors">Resumes</Link>
+            <Link href="/profile" className="text-text-muted hover:text-accent transition-colors">Profile</Link>
+          </div>
         </nav>
-        <main className="flex-1 px-6 py-8">{children}</main>
+        <main className="flex-1 px-6 py-10 max-w-6xl w-full mx-auto">{children}</main>
       </body>
     </html>
   );

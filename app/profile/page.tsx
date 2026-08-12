@@ -8,12 +8,17 @@ export default function ProfilePage() {
   const profile = JSON.parse(readFileSync(path, "utf-8"));
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Profile</h1>
+    <div className="flex flex-col gap-6 max-w-2xl">
+      <div>
+        <div className="text-xs font-mono uppercase tracking-widest text-text-faint mb-1">Pilot record</div>
+        <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
+      </div>
       {!usingLocal && (
-        <div className="border border-amber-800 bg-amber-950 text-amber-300 text-sm rounded-lg p-3">
-          No config/profile.local.json found — showing placeholder values. Real applications will fail
-          field-matching until this file is filled in.
+        <div className="card border-l-2 p-4 text-sm" style={{ borderLeftColor: "var(--status-review)" }}>
+          <span style={{ color: "var(--status-review)" }} className="font-mono text-xs uppercase tracking-wide">Placeholder data</span>
+          <p className="text-text-muted mt-1">
+            No <code className="font-mono text-text">config/profile.local.json</code> found — real applications will fail field-matching until this file is filled in.
+          </p>
         </div>
       )}
       <Section title="Contact">
@@ -46,8 +51,8 @@ export default function ProfilePage() {
           )
         )}
       </Section>
-      <p className="text-neutral-500 text-xs">
-        Edit <code>config/profile.local.json</code> directly to update these values (gitignored, never pushed).
+      <p className="text-text-faint text-xs">
+        Edit <code className="font-mono">config/profile.local.json</code> directly to update these values (gitignored, never pushed).
       </p>
     </div>
   );
@@ -55,18 +60,18 @@ export default function ProfilePage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="border border-neutral-800 rounded-lg p-4">
-      <h2 className="font-medium mb-3">{title}</h2>
-      <div className="flex flex-col gap-1">{children}</div>
+    <section className="card p-5">
+      <h2 className="text-sm font-mono uppercase tracking-wide text-text-muted mb-3">{title}</h2>
+      <div className="flex flex-col">{children}</div>
     </section>
   );
 }
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between text-sm">
-      <span className="text-neutral-500">{label}</span>
-      <span>{value}</span>
+    <div className="flex justify-between text-sm py-1.5 border-b border-border-soft last:border-0">
+      <span className="text-text-muted">{label}</span>
+      <span className="data-cell">{value}</span>
     </div>
   );
 }
