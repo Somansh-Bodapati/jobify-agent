@@ -5,18 +5,33 @@
     "pdfPath": "public/resumes/software-engineer.pdf",
     "keywords": [
       "software engineer",
+      "full stack engineer",
+      "full-stack developer",
+      "member of technical staff",
+      "javascript engineer",
+      "typescript engineer",
+      "web developer",
+      "software developer"
+    ]
+  },
+  {
+    "category": "frontend",
+    "label": "Frontend Engineer",
+    "pdfPath": "public/resumes/frontend.pdf",
+    "keywords": [
       "frontend engineer",
       "front-end engineer",
       "front end developer",
-      "react",
-      "angular",
       "ui engineer",
-      "web developer",
-      "full stack engineer",
-      "full-stack developer",
-      "javascript engineer",
-      "typescript engineer",
-      "member of technical staff"
+      "react developer",
+      "react engineer",
+      "angular developer",
+      "angular engineer",
+      "ui/ux engineer",
+      "design systems engineer",
+      "accessibility engineer",
+      "client-side engineer",
+      "presentation layer engineer"
     ]
   },
   {

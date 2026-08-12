@@ -38,6 +38,7 @@ async function main() {
       resumeCategory: "software-engineer",
       screenshotPath: join(process.cwd(), "public/screenshots/_test", `${ats}-test.png`),
       submit: false, // test-apply never submits, regardless of run-state.json
+      atsType: ats as import("../lib/ats/types").AtsType,
     });
 
     results.push({ ats, title: job.title, status: result.status, elapsedMs: result.elapsedMs, notes: result.notes });

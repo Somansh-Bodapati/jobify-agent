@@ -19,7 +19,9 @@ export type EligibleJob = {
   jobId: string;
   company: string;
   companySlug: string;
+  atsType: string;
   title: string;
+  description: string | null;
   url: string;
   location: string | null;
   country: string;
@@ -148,7 +150,9 @@ export async function getEligibleJobs(
       jobId: job.id,
       company: job.company.name,
       companySlug: job.company.slug,
+      atsType: job.company.atsType,
       title: job.title,
+      description: job.description,
       url: job.url,
       location: job.location,
       country,

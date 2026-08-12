@@ -36,25 +36,25 @@
         {
           "heading": "Policy Alignment Hub (GenAI Platform)",
           "bullets": [
-            "Serve as one of two frontend engineers on a cross-functional team building a policy alignment platform that centralizes organizational policy ingestion, giving each user a personal dashboard to manage documents and launch AI-driven assessments.",
-            "Build React interfaces surfacing AI-generated alignment scores and recommendation text that help users compare uploaded documents against defined regulatory and industry-standard criteria.",
-            "Partner with a Python GenAI services team (assessment/scoring engine) and a Java team (document and application services) to ship assessment workflows end-to-end.",
-            "Contribute to LLM-based agent workflows that orchestrate assessment kickoff, result generation, and downstream remediation planning."
+            { "text": "Serve as one of two frontend engineers on a cross-functional team building a policy alignment platform that centralizes organizational policy ingestion, giving each user a personal dashboard to manage documents and launch AI-driven assessments.", "tags": ["frontend", "react", "ui", "cross-functional"], "priority": 3 },
+            { "text": "Build React interfaces surfacing AI-generated alignment scores and recommendation text that help users compare uploaded documents against defined regulatory and industry-standard criteria.", "tags": ["frontend", "react", "ui", "ai", "genai"], "priority": 2 },
+            { "text": "Partner with a Python GenAI services team (assessment/scoring engine) and a Java team (document and application services) to ship assessment workflows end-to-end.", "tags": ["ai", "genai", "backend", "python", "java", "cross-functional"], "priority": 3 },
+            { "text": "Contribute to LLM-based agent workflows that orchestrate assessment kickoff, result generation, and downstream remediation planning.", "tags": ["ai", "genai", "llm", "agent"], "priority": 1 }
           ]
         },
         {
           "heading": "ERM Reports Orchestration Platform",
           "bullets": [
-            "Designed, implemented, and tested a micro-frontend Angular module within a 20+ MFE ecosystem using Webpack Module Federation, integrating 8+ backend microservices and improving load performance ~35% through caching and optimized API orchestration.",
-            "Engineered a configurable approval workflow engine supporting 5 stages, 8 roles, and granular permissions — enabling full auditability and regulatory compliance for enterprise reporting.",
-            "Built reusable UI framework components (dashboards, tables, modals) and a role-based entitlement system (50+ mapped actions), maintaining 90%+ Jest test coverage through unit and integration testing, and contributing to framework upgrades and codebase refactoring."
+            { "text": "Designed, implemented, and tested a micro-frontend Angular module within a 20+ MFE ecosystem using Webpack Module Federation, integrating 8+ backend microservices and improving load performance ~35% through caching and optimized API orchestration.", "tags": ["frontend", "angular", "architecture", "microservices", "performance"], "priority": 1 },
+            { "text": "Engineered a configurable approval workflow engine supporting 5 stages, 8 roles, and granular permissions — enabling full auditability and regulatory compliance for enterprise reporting.", "tags": ["backend", "architecture", "workflow", "enterprise"], "priority": 2 },
+            { "text": "Built reusable UI framework components (dashboards, tables, modals) and a role-based entitlement system (50+ mapped actions), maintaining 90%+ Jest test coverage through unit and integration testing, and contributing to framework upgrades and codebase refactoring.", "tags": ["frontend", "ui", "architecture", "testing"], "priority": 2 }
           ]
         },
         {
           "heading": "Risk Management Portal",
           "bullets": [
-            "Developed Angular dashboards with responsive, accessible UI for reconciliation validation across financial systems, supporting 500+ Risk & Compliance users in detecting data discrepancies and breach scenarios.",
-            "Connected front-end features to back-end systems via RESTful API integrations; implemented transaction-level drill-down views and execution controls, handling error responses and edge cases to maintain product stability."
+            { "text": "Developed Angular dashboards with responsive, accessible UI for reconciliation validation across financial systems, supporting 500+ Risk & Compliance users in detecting data discrepancies and breach scenarios.", "tags": ["frontend", "angular", "ui", "accessibility"], "priority": 2 },
+            { "text": "Connected front-end features to back-end systems via RESTful API integrations; implemented transaction-level drill-down views and execution controls, handling error responses and edge cases to maintain product stability.", "tags": ["frontend", "backend", "api", "integration"], "priority": 3 }
           ]
         }
       ]
@@ -66,10 +66,10 @@
       "subsections": [
         {
           "bullets": [
-            "Built mobility control protocol logic enabling seamless handoff between visible-light transmitters with zero perceptible data loss; contributed to low-level debugging and performance testing in a real-time networking environment.",
-            "Developed kernel-level networking components using Rust and eBPF to optimize packet handling and latency for hybrid Wi-Fi/light-based communication systems.",
-            "Built personal projects using React, focusing on component-based UI development, state management, and integration testing — applying front-end fundamentals outside of core work responsibilities.",
-            "Selected for UC Berkeley SkyDeck accelerator (Sep 2024 cohort), collaborating with researchers and industry mentors."
+            { "text": "Built mobility control protocol logic enabling seamless handoff between visible-light transmitters with zero perceptible data loss; contributed to low-level debugging and performance testing in a real-time networking environment.", "tags": ["backend", "networking", "systems", "performance"], "priority": 2 },
+            { "text": "Developed kernel-level networking components using Rust and eBPF to optimize packet handling and latency for hybrid Wi-Fi/light-based communication systems.", "tags": ["backend", "systems", "networking"], "priority": 3 },
+            { "text": "Built personal projects using React, focusing on component-based UI development, state management, and integration testing — applying front-end fundamentals outside of core work responsibilities.", "tags": ["frontend", "react", "ui"], "priority": 1 },
+            { "text": "Selected for UC Berkeley SkyDeck accelerator (Sep 2024 cohort), collaborating with researchers and industry mentors.", "tags": ["general"], "priority": 4 }
           ]
         }
       ]
@@ -81,7 +81,7 @@
       "subsections": [
         {
           "bullets": [
-            "Developed a media inventory management website that improved workflow speed by 90% and streamlined setup of networks, live streaming, and recording for campus events."
+            { "text": "Developed a media inventory management website that improved workflow speed by 90% and streamlined setup of networks, live streaming, and recording for campus events.", "tags": ["frontend", "general"], "priority": 1 }
           ]
         }
       ]
@@ -97,6 +97,10 @@
     "software-engineer": {
       "summary": "Software Developer with 2+ years of experience building scalable, user-focused applications across enterprise and startup environments, spanning front-end development and, more recently, GenAI-powered platforms. Proven ability to design and implement front-end interfaces, integrate APIs, debug production issues, and deliver clean, maintainable code within Agile teams. Experienced with Angular, React, JavaScript, HTML/CSS, Python-based GenAI services, and complex, regulated systems.",
       "skillOrder": ["programming", "architecture", "ai", "devops"]
+    },
+    "frontend": {
+      "summary": "Frontend Engineer with 2+ years of experience designing and shipping user-facing interfaces across enterprise and startup environments. Proven ability to build micro-frontend architectures, reusable component libraries, and accessible, responsive UI within a 20+ MFE ecosystem — while integrating cleanly with backend APIs and design systems. Experienced with Angular, React, TypeScript, Design Systems, Webpack Module Federation, and complex, regulated systems.",
+      "skillOrder": ["architecture", "programming", "devops", "ai"]
     },
     "backend-developer": {
       "summary": "Software Developer with 2+ years of experience across enterprise and startup environments, building API-driven, service-oriented systems alongside Java and Python backend teams. Proven ability to design workflow engines, entitlement systems, and API orchestration layers, integrate 8+ backend microservices, and deliver clean, maintainable code within Agile teams. Experienced with Java, Python, SpringBoot, RESTful APIs, OracleDB, MongoDB, and complex, regulated systems.",

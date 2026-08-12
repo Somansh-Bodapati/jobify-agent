@@ -1,5 +1,6 @@
 type SkillGroup = { label: string; items: string[] };
-type Subsection = { heading?: string; bullets: string[] };
+export type Bullet = { text: string; tags: string[]; priority: number };
+type Subsection = { heading?: string; bullets: Bullet[] };
 type ExperienceEntry = { title: string; location: string; dates: string; subsections: Subsection[] };
 
 export type ResumeContent = {
@@ -43,7 +44,7 @@ export function renderResumeHtml(content: ResumeContent, category: string): stri
         .map(
           (sub) => `
         ${sub.heading ? `<div class="sub-heading">${esc(sub.heading)}</div>` : ""}
-        <ul>${sub.bullets.map((b) => `<li>${esc(b)}</li>`).join("")}</ul>
+        <ul>${sub.bullets.map((b) => `<li>${esc(b.text)}</li>`).join("")}</ul>
       `
         )
         .join("");

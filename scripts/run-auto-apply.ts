@@ -15,6 +15,7 @@ import { getEligibleJobs } from "../lib/eligibleJobs";
 import { runJob } from "../lib/ats/engine";
 import type { JobResult } from "../lib/ats/types";
 import { reportRecurringUnmatchedQuestions } from "../lib/unmatchedQuestions";
+import { generateTailoredResume } from "../lib/generateTailoredResume";
 
 const CIRCUIT_BREAKER_THRESHOLD = 3;
 const RETRY_CAP = 3;
@@ -145,13 +146,28 @@ async function main() {
     );
     mkdirSync(join(process.cwd(), "public/screenshots", job.companySlug), { recursive: true });
 
+    // Per-JD tailoring: reorder (never rewrite) the base resume's bullets by
+    // relevance to this job's title/description. Falls back to the static
+    // pre-built category PDF on any failure — never blocks the application.
+    let resumePdfPath = join(process.cwd(), job.resumePdfPath);
+    try {
+      const tailoredDir = join(process.cwd(), "public/resumes/tailored", job.companySlug);
+      mkdirSync(tailoredDir, { recursive: true });
+      const tailoredPath = join(tailoredDir, `${job.dedupeId}.pdf`);
+      await generateTailoredResume(browser, job.resumeCategory, job.title, job.description ?? "", tailoredPath);
+      resumePdfPath = tailoredPath;
+    } catch (err) {
+      console.error(`[run-auto-apply] tailored resume generation failed for "${job.title}" — using static ${job.resumeCategory}.pdf instead: ${err instanceof Error ? err.message : err}`);
+    }
+
     const result: JobResult = await runJob(browser, {
       jobUrl: job.url,
-      resumePdfPath: join(process.cwd(), job.resumePdfPath),
+      resumePdfPath,
       resumeCategory: job.resumeCategory,
       state: job.location ?? undefined,
       screenshotPath,
       submit: approvedCompanies.has(job.company),
+      atsType: job.atsType as import("../lib/ats/types").AtsType,
     });
 
     await recordApplication({

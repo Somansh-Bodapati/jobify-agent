@@ -3,6 +3,7 @@ import { mkdirSync } from "fs";
 import { dirname } from "path";
 import { detectAtsType, requiresManualApply } from "./detect";
 import { detectBlocker } from "./blockers";
+import { dismissCookieConsent } from "./cookieConsent";
 import { scanFields, fillDetectedFields } from "./generic";
 import * as greenhouse from "./greenhouse";
 import * as lever from "./lever";
@@ -35,7 +36,7 @@ export async function runJob(browser: Browser, target: FillTarget): Promise<JobR
     return { status: "manual_apply_needed", elapsedMs: Date.now() - start, notes: "Non-Greenhouse/Lever/Ashby ATS (Workday or similar) — apply manually." };
   }
 
-  const atsType = detectAtsType(target.jobUrl);
+  const atsType = target.atsType ?? detectAtsType(target.jobUrl);
   const context = await browser.newContext({ viewport: { width: 1280, height: 2000 } });
   const page = await context.newPage();
 
@@ -74,9 +75,16 @@ async function runJobInner(
     return { status: "failed", failureReason: blocker.reason, elapsedMs: Date.now() - start, notes: blocker.detail };
   }
 
+  await dismissCookieConsent(page);
+
   if (atsType === "greenhouse") await greenhouse.ensureFormVisible(page);
   else if (atsType === "lever") await lever.ensureFormVisible(page, target.jobUrl);
   else if (atsType === "ashby") await ashby.ensureFormVisible(page);
+
+  // ensureFormVisible may have navigated to a different page (e.g. a
+  // Greenhouse embed's own URL) which can carry its own separate cookie
+  // banner — dismiss again rather than assuming the first pass covered it.
+  await dismissCookieConsent(page);
 
   const blockerAfterReveal = await detectBlocker(page);
   if (blockerAfterReveal.blocked) {

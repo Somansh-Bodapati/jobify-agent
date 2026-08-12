@@ -60,6 +60,12 @@ next-env.d.ts
 # structured per-run logs (may reference personal form data)
 /logs/
 
+# per-job tailored resume PDFs (generated at apply-time, not source content)
+/public/resumes/tailored/
+
+# local resume preview PNGs (debug artifacts from scripts/preview-resume.ts)
+/resumes/preview/
+
 # claude code isolated agent worktrees (ephemeral tooling state)
 /.claude/worktrees/
 
