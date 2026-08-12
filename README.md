@@ -45,7 +45,13 @@ Or, inside Claude Code, `/auto-apply` (same routing, plus a JobDataLake discover
 | Ashby | ✅ public job-board API | ✅ | includes Yes/No button-group questions |
 | Workday / other custom ATS | — | — | detected via `lib/ats/detect.ts`, recorded `manual_apply_needed` |
 
-Bot-walls (Cloudflare challenges, hCaptcha, reCAPTCHA challenge frames) are detected and the job is skipped — never bypassed. Required questions the engine can't confidently answer are left blank and the application is held as `ready_for_review` with the specific unmatched questions listed, rather than guessed.
+Bot-walls (Cloudflare challenges, hCaptcha, reCAPTCHA challenge frames) and cookie-consent banners are detected and handled (banners dismissed preferring "reject"; bot-walls skipped, never bypassed). Companies that embed their ATS form in an iframe on their own branded domain (e.g. Databricks embeds Greenhouse) are detected and navigated to directly. Required questions the engine can't confidently answer are left blank and the application is held as `ready_for_review` with the specific unmatched questions listed, rather than guessed.
+
+## Country/quality filter and resume tailoring
+
+**The single most important filter**: USA is the only market considered unless the qualifying USA pipeline (resume match ≥50%, posted within 7 days) can't fill the daily target (default 20, or `--limit`) on its own — only then does India get pulled in as a fallback, gated on a verified ≥20 LPA salary (`lib/eligibleJobs.ts`, `lib/geo.ts`). Jobs failing the gate are excluded outright, tracked in `stats.excludedByFilter`.
+
+Each application gets a **per-job tailored resume** (`lib/resumeTailor.ts` + `lib/generateTailoredResume.ts`): the base resume's real bullets are reordered (never rewritten or invented) by relevance to that specific job's title/description, rendered, and verified 1-page/links-intact — falling back to the static category PDF on any failure. Four categories: software-engineer, frontend, backend-developer, ai-engineer.
 
 ## Key scripts
 
@@ -59,8 +65,12 @@ Bot-walls (Cloudflare challenges, hCaptcha, reCAPTCHA challenge frames) are dete
 | `scripts/run-auto-apply.ts` | Main entrypoint: scrape → eligible queue → fill engine per job → record → circuit breaker → JSON summary |
 | `scripts/manage-companies.ts` | `--add` / `--approve` / `--unapprove` / `--unblock` |
 | `scripts/test-apply.ts` | Dry-run smoke test of the fill engine, one job per ATS, no DB writes |
-| `scripts/build-resume-variants.ts` | Renders `config/resumeContent.json` → 3 tailored 1-page PDFs, verifies page count + links |
-| `lib/ats/engine.ts` | Core fill orchestration: navigate, detect blockers/ATS, fill, multi-step, submit-if-approved |
+| `scripts/build-resume-variants.ts` | Renders `config/resumeContent.json` → 4 static category 1-page PDFs (the tailoring fallback), verifies page count + links |
+| `scripts/unmatched-questions-report.ts` | Recurring unmatched required questions across applications — a nudge to add real answers |
+| `lib/ats/engine.ts` | Core fill orchestration: navigate, detect blockers/ATS/cookie banners, fill, multi-step, submit-if-approved |
+| `lib/eligibleJobs.ts` | Dedup + resume matching + country/quality gate + USA-first/India-fallback quota + priority ranking |
+| `lib/geo.ts` | Classifies a job's country (US/IN/OTHER/UNKNOWN) from location + description text |
+| `lib/resumeTailor.ts` | Deterministic per-JD bullet reordering by tag relevance — no LLM, no fabrication risk |
 | `lib/matchResume.ts` | Keyword-scored resume matching, no fallback (skip rather than send the wrong resume) |
 | `lib/matchQuestion.ts` | ATS question text → profile/answer field, incl. state-tiered salary rules |
 
