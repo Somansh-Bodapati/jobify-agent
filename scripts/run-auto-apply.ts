@@ -108,7 +108,7 @@ async function main() {
 
   const { fillable, manualApplyNeeded, stats } = await getEligibleJobs(requestedNames, limit);
   console.error(
-    `[run-auto-apply] ${stats.scanned} scanned | ${fillable.length} fillable | ${manualApplyNeeded.length} manual-apply-needed`
+    `[run-auto-apply] ${stats.scanned} scanned | ${stats.excludedByFilter} excluded (country/quality/salary) | ${fillable.length} fillable (${stats.usCount} US, ${stats.indiaCount} India fallback) | ${manualApplyNeeded.length} manual-apply-needed`
   );
 
   // Record manual-apply-needed jobs once so they surface in the dashboard and aren't rescanned every run.
@@ -126,7 +126,7 @@ async function main() {
   const deadline = maxMinutes ? Date.now() + maxMinutes * 60_000 : null;
   const browser = await chromium.launch();
 
-  const outcomes: { company: string; title: string; status: string; failureReason?: string }[] = [];
+  const outcomes: { company: string; title: string; status: string; country: string; failureReason?: string }[] = [];
   const consecutiveFailuresByCompany = new Map<string, number>();
   const blockedThisRun = new Set<string>();
 
@@ -164,7 +164,7 @@ async function main() {
       failureReason: result.failureReason,
     });
 
-    outcomes.push({ company: job.company, title: job.title, status: result.status, failureReason: result.failureReason });
+    outcomes.push({ company: job.company, title: job.title, status: result.status, country: job.country, failureReason: result.failureReason });
 
     await humanPaceDelay();
 
@@ -197,10 +197,17 @@ async function main() {
 
   const summary = {
     scanned: stats.scanned,
+    excludedByFilter: stats.excludedByFilter,
     processed: outcomes.length,
+    usTargeted: stats.usCount,
+    indiaFallbackTargeted: stats.indiaCount,
     manualApplyNeeded: manualApplyNeeded.length,
     byStatus: outcomes.reduce<Record<string, number>>((acc, o) => {
       acc[o.status] = (acc[o.status] ?? 0) + 1;
+      return acc;
+    }, {}),
+    byCountry: outcomes.reduce<Record<string, number>>((acc, o) => {
+      acc[o.country] = (acc[o.country] ?? 0) + 1;
       return acc;
     }, {}),
     byCompany: outcomes.reduce<Record<string, number>>((acc, o) => {

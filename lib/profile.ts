@@ -10,13 +10,20 @@ export type Profile = {
   phone: string;
   linkedin: string;
   github: string;
+  streetAddress: string;
+  apartment?: string;
   city: string;
   state: string;
+  zip: string;
   country: string;
   workAuthorization: {
     authorizedToWorkInUS: boolean;
     requiresSponsorshipNow: boolean;
     requiresSponsorshipFuture: boolean;
+    freeTextAnswer: string;
+  };
+  indiaWorkAuthorization: {
+    citizen: boolean;
     freeTextAnswer: string;
   };
   selfIdentification: {

@@ -35,6 +35,8 @@ model Job {
   description       String?
   salaryMin         Int?
   salaryMax         Int?
+  salaryCurrency    String        @default("USD")
+  countryCode       String?       // "US" | "IN" | "OTHER" | "UNKNOWN" — see lib/geo.ts
   sponsorshipSignal String?       // "mentions_sponsorship" | "no_sponsorship" | "unknown"
   source            String        @default("company_scrape") // "company_scrape" | "jobdatalake"
   postedAt          DateTime?

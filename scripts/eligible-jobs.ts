@@ -19,7 +19,7 @@ async function main() {
   const { fillable, manualApplyNeeded, stats } = await getEligibleJobs(requestedNames, limit);
 
   console.error(
-    `[eligible-jobs] ${stats.scanned} scanned | ${stats.skippedApplied} already applied/recorded | ${stats.skippedNoMatch} no resume match | ${fillable.length} fillable | ${manualApplyNeeded.length} manual-apply-needed`
+    `[eligible-jobs] ${stats.scanned} scanned | ${stats.skippedApplied} already applied/recorded | ${stats.skippedNoMatch} no resume match | ${stats.excludedByFilter} excluded (country/quality/salary gate) | ${fillable.length} fillable (${stats.usCount} US, ${stats.indiaCount} India fallback) | ${manualApplyNeeded.length} manual-apply-needed`
   );
   console.log(JSON.stringify({ fillable, manualApplyNeeded }, null, 2));
   await prisma.$disconnect();

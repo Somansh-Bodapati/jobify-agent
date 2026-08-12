@@ -5,13 +5,21 @@
   "phone": "REPLACE_ME",
   "linkedin": "REPLACE_ME",
   "github": "REPLACE_ME",
+  "streetAddress": "REPLACE_ME",
+  "apartment": "",
   "city": "REPLACE_ME",
   "state": "REPLACE_ME",
+  "zip": "REPLACE_ME",
   "country": "United States",
   "workAuthorization": {
     "authorizedToWorkInUS": true,
     "requiresSponsorshipNow": false,
-    "requiresSponsorshipFuture": true
+    "requiresSponsorshipFuture": true,
+    "freeTextAnswer": "REPLACE_ME"
+  },
+  "indiaWorkAuthorization": {
+    "citizen": false,
+    "freeTextAnswer": "REPLACE_ME"
   },
   "selfIdentification": {
     "gender": "Decline to state",
@@ -21,7 +29,14 @@
   },
   "availability": {
     "noticePeriod": "2 weeks",
+    "startDateAnswer": "REPLACE_ME",
     "relocation": true,
     "remote": true
+  },
+  "salary": {
+    "freeTextAnswer": "Open to discussion based on total compensation and scope of the role.",
+    "tiers": {
+      "DEFAULT": { "low": 100000, "high": 150000 }
+    }
   }
 }

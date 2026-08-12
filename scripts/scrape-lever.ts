@@ -5,6 +5,7 @@
  */
 import { prisma } from "../lib/db";
 import { detectSponsorshipSignal } from "../lib/sponsorship";
+import { detectCountry } from "../lib/geo";
 import { fetchWithRetry } from "../lib/fetchRetry";
 
 type LeverPosting = {
@@ -46,6 +47,7 @@ async function main() {
       const description = job.descriptionPlain ?? "";
       const sponsorshipSignal = detectSponsorshipSignal(job.text, description);
       const postedAt = job.createdAt ? new Date(job.createdAt) : null;
+      const countryCode = detectCountry(job.categories?.location ?? null, description);
       await prisma.job.upsert({
         where: { externalId_companySlug: { externalId: job.id, companySlug: company.slug } },
         update: {
@@ -57,6 +59,7 @@ async function main() {
           salaryMax: job.salaryRange?.max ?? null,
           sponsorshipSignal,
           postedAt,
+          countryCode,
         },
         create: {
           externalId: job.id,
@@ -69,6 +72,7 @@ async function main() {
           salaryMax: job.salaryRange?.max ?? null,
           sponsorshipSignal,
           postedAt,
+          countryCode,
           source: "company_scrape",
         },
       });

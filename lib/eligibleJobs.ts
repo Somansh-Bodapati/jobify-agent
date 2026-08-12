@@ -5,6 +5,16 @@ import { loadProfile, salaryTierForState } from "./profile";
 
 const SUPPORTED_ATS = new Set(["greenhouse", "lever", "ashby"]);
 
+// --- Country-priority quota: the user's top-priority filter ---
+// USA is the primary market. India is a fallback ONLY when today's USA
+// pipeline (after quality gates) can't fill the daily target on its own.
+const DAILY_TARGET = 20;
+const MATCH_PERCENT_THRESHOLD = 50; // raw matchResumeScored score >= 100 (see matchPercent below)
+const FRESHNESS_DAYS = 7;
+const INR_PER_USD = 83; // approximate, documented — not a live FX rate
+const INDIA_SALARY_FLOOR_INR = 2_000_000; // 20 LPA
+const INDIA_SALARY_FLOOR_USD = Math.round(INDIA_SALARY_FLOOR_INR / INR_PER_USD);
+
 export type EligibleJob = {
   jobId: string;
   company: string;
@@ -12,6 +22,7 @@ export type EligibleJob = {
   title: string;
   url: string;
   location: string | null;
+  country: string;
   dedupeId: string;
   resumeCategory: string;
   resumePdfPath: string;
@@ -26,34 +37,40 @@ function payScore(salaryMin: number | null, salaryMax: number | null, targetHigh
 }
 
 function sponsorshipScore(signal: string | null): number {
-  // Scaled up from the original -3/0/+1: at that magnitude a hard "no
-  // sponsorship" signal was negligible next to a 0-300 match score and
-  // barely deprioritized anything. -30/+5 actually moves the needle without
-  // being able to fully cancel out a strong match on its own.
   if (signal === "no_sponsorship") return -30;
   if (signal === "mentions_sponsorship") return 5;
   return 0;
 }
 
-/**
- * Bounded freshness bonus — a tie-breaker among comparable matches, never an
- * override of a real match-quality gap. Capped at 40, well below what even a
- * single extra matched keyword is typically worth (15-40) let alone a title
- * match (+50) — so a fresh weak match cannot leapfrog a meaningfully better
- * older match, but two similar-match jobs reorder toward the fresher one.
- * Window sizes follow the "first 5 days matter most" pattern from
- * job-application response-rate research; null postedAt (pre-dates the field,
- * or a source that doesn't provide one) is neutral, not penalized.
- */
 function recencyBonus(postedAt: Date | null): number {
   if (!postedAt) return 0;
   const hours = (Date.now() - postedAt.getTime()) / 3_600_000;
-  if (hours < 0) return 0; // clock skew / bad data — don't reward
+  if (hours < 0) return 0;
   if (hours <= 24) return 40;
   if (hours <= 72) return 25;
   if (hours <= 24 * 5) return 12;
   if (hours <= 24 * 14) return 4;
   return 0;
+}
+
+/** Normalizes matchResumeScored's unbounded raw score to a 0-100 "match
+ * percent" for the 50%-threshold quality gate (raw score of ~200 — several
+ * solid keyword matches plus a title bonus — maps to 100%). */
+function matchPercent(rawScore: number): number {
+  return Math.min(100, Math.round((rawScore / 200) * 100));
+}
+
+function isStale(postedAt: Date | null): boolean {
+  if (!postedAt) return false; // unknown age — don't penalize missing data
+  const days = (Date.now() - postedAt.getTime()) / 86_400_000;
+  return days > FRESHNESS_DAYS;
+}
+
+function meetsIndiaSalaryBar(salaryMin: number | null, salaryMax: number | null, currency: string): boolean {
+  const value = salaryMax ?? salaryMin;
+  if (value == null) return false; // can't verify the bar — exclude rather than guess
+  const floor = currency === "INR" ? INDIA_SALARY_FLOOR_INR : INDIA_SALARY_FLOOR_USD;
+  return value >= floor;
 }
 
 export async function getEligibleJobs(
@@ -62,9 +79,17 @@ export async function getEligibleJobs(
 ): Promise<{
   fillable: EligibleJob[];
   manualApplyNeeded: EligibleJob[];
-  stats: { scanned: number; skippedApplied: number; skippedNoMatch: number };
+  stats: {
+    scanned: number;
+    skippedApplied: number;
+    skippedNoMatch: number;
+    excludedByFilter: number;
+    usCount: number;
+    indiaCount: number;
+  };
 }> {
   const profile = loadProfile();
+  const target = limit ?? DAILY_TARGET;
 
   const jobs = await prisma.job.findMany({
     where: {
@@ -78,11 +103,14 @@ export async function getEligibleJobs(
   });
 
   const resumes = loadResumeConfigs();
-  const fillable: EligibleJob[] = [];
-  const manualApplyNeeded: EligibleJob[] = [];
+  const usSupported: EligibleJob[] = [];
+  const usUnsupported: EligibleJob[] = [];
+  const indiaSupported: EligibleJob[] = [];
+  const indiaUnsupported: EligibleJob[] = [];
 
   let skippedApplied = 0;
   let skippedNoMatch = 0;
+  let excludedByFilter = 0;
 
   for (const job of jobs) {
     const alreadyApplied = job.applications.some(
@@ -100,6 +128,15 @@ export async function getEligibleJobs(
       continue;
     }
 
+    const country = job.countryCode ?? "UNKNOWN";
+    const qualifiesUS = country === "US" && matchPercent(match.score) >= MATCH_PERCENT_THRESHOLD && !isStale(job.postedAt);
+    const qualifiesIndia = country === "IN" && meetsIndiaSalaryBar(job.salaryMin, job.salaryMax, job.salaryCurrency);
+
+    if (!qualifiesUS && !qualifiesIndia) {
+      excludedByFilter++;
+      continue;
+    }
+
     const tier = salaryTierForState(profile, job.location ?? profile.state);
     const score =
       match.score +
@@ -114,6 +151,7 @@ export async function getEligibleJobs(
       title: job.title,
       url: job.url,
       location: job.location,
+      country,
       dedupeId: dedupeIdFromUrl(job.url),
       resumeCategory: match.resume.category,
       resumePdfPath: match.resume.pdfPath,
@@ -121,16 +159,33 @@ export async function getEligibleJobs(
       postedAt: job.postedAt?.toISOString() ?? null,
     };
 
-    if (SUPPORTED_ATS.has(job.company.atsType)) fillable.push(entry);
-    else manualApplyNeeded.push(entry);
+    const supported = SUPPORTED_ATS.has(job.company.atsType);
+    if (qualifiesUS) (supported ? usSupported : usUnsupported).push(entry);
+    else (supported ? indiaSupported : indiaUnsupported).push(entry);
   }
 
-  fillable.sort((a, b) => b.priorityScore - a.priorityScore);
-  manualApplyNeeded.sort((a, b) => b.priorityScore - a.priorityScore);
+  const byScoreDesc = (a: EligibleJob, b: EligibleJob) => b.priorityScore - a.priorityScore;
+  usSupported.sort(byScoreDesc);
+  usUnsupported.sort(byScoreDesc);
+  indiaSupported.sort(byScoreDesc);
+  indiaUnsupported.sort(byScoreDesc);
+
+  const usFillable = usSupported.slice(0, target);
+  const indiaFillable = usFillable.length < target ? indiaSupported.slice(0, target - usFillable.length) : [];
+
+  const fillable = [...usFillable, ...indiaFillable];
+  const manualApplyNeeded = [...usUnsupported, ...indiaUnsupported];
 
   return {
-    fillable: limit ? fillable.slice(0, limit) : fillable,
+    fillable,
     manualApplyNeeded,
-    stats: { scanned: jobs.length, skippedApplied, skippedNoMatch },
+    stats: {
+      scanned: jobs.length,
+      skippedApplied,
+      skippedNoMatch,
+      excludedByFilter,
+      usCount: usFillable.length,
+      indiaCount: indiaFillable.length,
+    },
   };
 }

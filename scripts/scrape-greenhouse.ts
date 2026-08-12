@@ -5,6 +5,7 @@
  */
 import { prisma } from "../lib/db";
 import { detectSponsorshipSignal } from "../lib/sponsorship";
+import { detectCountry } from "../lib/geo";
 import { fetchWithRetry } from "../lib/fetchRetry";
 
 type GreenhouseJob = {
@@ -45,6 +46,7 @@ async function main() {
     for (const job of jobs) {
       const sponsorshipSignal = detectSponsorshipSignal(job.title, job.content ?? "");
       const postedAt = job.updated_at ? new Date(job.updated_at) : null;
+      const countryCode = detectCountry(job.location?.name ?? null, job.content ?? "");
       await prisma.job.upsert({
         where: { externalId_companySlug: { externalId: String(job.id), companySlug: company.slug } },
         update: {
@@ -54,6 +56,7 @@ async function main() {
           description: job.content ?? null,
           sponsorshipSignal,
           postedAt,
+          countryCode,
         },
         create: {
           externalId: String(job.id),
@@ -64,6 +67,7 @@ async function main() {
           description: job.content ?? null,
           sponsorshipSignal,
           postedAt,
+          countryCode,
           source: "company_scrape",
         },
       });

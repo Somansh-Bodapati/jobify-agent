@@ -6,15 +6,20 @@
  * falling back to a slugified company name otherwise.
  *
  * CLI: npx tsx scripts/import-jobs.ts <path-to-json-file>
- * JSON shape: array of { id?, title, company, location?, salaryMin?, salaryMax?, skills?, url, postedAt? }
+ * JSON shape: array of { id?, title, company, location?, salaryMin?, salaryMax?, skills?, url, postedAt?, country? }
  * postedAt is optional (ISO string or anything Date() parses) — when the
  * discovery step can't extract a posting date, omit it; the job just gets no
  * recency bonus in ranking rather than blocking the import.
+ * country is optional ("US"/"IN"/etc, from whatever `countries` filter the
+ * discovery search_jobs call used) — pass it through when known, since it's
+ * more reliable than re-inferring from free-text location; falls back to
+ * lib/geo.ts's detectCountry heuristic when omitted.
  */
 import { readFileSync } from "fs";
 import { prisma } from "../lib/db";
 import { detectAtsType } from "../lib/ats/detect";
 import { detectSponsorshipSignal } from "../lib/sponsorship";
+import { detectCountry } from "../lib/geo";
 import { dedupeIdFromUrl } from "../lib/dedupe";
 
 type ImportedJob = {
@@ -27,6 +32,7 @@ type ImportedJob = {
   skills?: string[];
   url: string;
   postedAt?: string;
+  country?: string;
 };
 
 function slugify(name: string): string {
@@ -73,6 +79,7 @@ async function main() {
     const sponsorshipSignal = detectSponsorshipSignal(job.title, description);
     const externalId = job.id ?? dedupeIdFromUrl(job.url);
     const postedAt = job.postedAt ? new Date(job.postedAt) : null;
+    const countryCode = job.country?.toUpperCase() || detectCountry(job.location ?? null, description);
 
     await prisma.job.upsert({
       where: { externalId_companySlug: { externalId, companySlug: slug } },
@@ -85,6 +92,7 @@ async function main() {
         salaryMax: job.salaryMax ?? null,
         sponsorshipSignal,
         postedAt,
+        countryCode,
       },
       create: {
         externalId,
@@ -97,6 +105,7 @@ async function main() {
         salaryMax: job.salaryMax ?? null,
         sponsorshipSignal,
         postedAt,
+        countryCode,
         source: "jobdatalake",
       },
     });
